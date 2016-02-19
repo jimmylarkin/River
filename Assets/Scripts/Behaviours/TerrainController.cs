@@ -8,40 +8,36 @@ public class TerrainController : MonoBehaviour
   public int octaves = 8;
   public float startAmplitude = 128;
   public float startFrequency = 4;
-  PerlinNoise gen = new PerlinNoise();
+  Ground ground;
 
-  private 
+  private
 
   // Use this for initialization
   void Start()
   {
+    ground = new Ground() { ScaleHorizontal = scaleHorizontal, ScaleVertical = scaleVertical, Octaves = octaves, StartAmplitude = startAmplitude, StartFrequency = startFrequency };
+    ground.Init();
+    ground.Tiles = new GroundTile[transform.childCount];
     for (int i = 0; i < transform.childCount; i++)
     {
-      var terrainGameObject = transform.GetChild(i).gameObject;
-      SetTerrainHeights(terrainGameObject, i);
-    }
-  }
-
-  public void PlacenewTile(float cameraPositionZ)
-  {
-    
-  }
-
-  private void SetTerrainHeights(GameObject terrainGameObject, int offsetMultiplier)
-  {
-    Terrain terrain = terrainGameObject.GetComponent<Terrain>();
-    float[,] heights = new float[terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight];
-    int offset = offsetMultiplier * terrain.terrainData.heightmapHeight;
-    float startWidth = 0f + (float)offset;
-    float startHeight = 0f;
-    for (int i = 0; i < terrain.terrainData.heightmapWidth; i++)
-    {
-      for (int k = 0; k < terrain.terrainData.heightmapHeight; k++)
+      GameObject childgameObject = transform.GetChild(i).gameObject;
+      Terrain terrain = childgameObject.GetComponent<Terrain>();
+      if (terrain != null)
       {
-        float val = (float)gen.OctavePerlin(((float)i + startWidth) / scaleHorizontal, ((float)k + startHeight) / scaleHorizontal, 0, octaves, startAmplitude, startFrequency) / scaleVertical;
-        heights[i, k] = val;
+        ground.Tiles[i] = new GroundTile() { TerrainObject = terrain };
+        ground.Tiles[i].SetHeightmap(ground.GroundData, scaleVertical);
       }
     }
-    terrain.terrainData.SetHeights(0, 0, heights);
+
+  }
+
+  public void AdvanceTile()
+  {
+    ground.AdvanceTile();
+  }
+
+  public void HeightmapSweep()
+  {
+    //ground.GenerateTerrainStripe(10);
   }
 }

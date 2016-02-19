@@ -9,6 +9,24 @@ public class PerlinNoise
     this.repeat = repeat;
   }
 
+  public float[][] Generate(int xFrom, int xTo, int yFrom, int yTo, float scale, int octaves, float startAmplitude, float startFrequency)
+  {
+    int xSize =xTo - xFrom;
+    int ySize = yTo - yFrom;
+    float[][] yData = new float[ySize][];
+    for (int y = yFrom; y < yTo; y++)
+    {
+      float[] xData = new float[xSize];
+      for (int x = xFrom; x < xTo; x++)
+      {
+        float val = (float)OctavePerlin((float)x / scale, (float)y / scale, 0, octaves, startAmplitude, startFrequency);
+        xData[x] = val;
+      }
+      yData[y] = xData;
+    }
+    return yData;
+  }
+
   public double OctavePerlin(double x, double y, double z, int octaves, double amplitude = 1, double frequency = 1)
   {
     double total = 0;
@@ -137,68 +155,4 @@ public class PerlinNoise
   {
     return a + x * (b - a);
   }
-
-  //public int Octaves { get; set; }
-  //public float Persistence { get; set; }
-
-  //public PerlinNoiseGenerator(float persistence, int octaves)
-  //{
-  //  Persistence = persistence;
-  //  Octaves = octaves;
-  //}
-
-  //public float PerlinNoise2D(float x, float y)
-  //{
-  //  float total = 0;
-  //  float p = Persistence;
-  //  int n = Octaves;
-  //  for (int i = 0; i < n; i++)
-  //  {
-  //    var frequency = Mathf.Pow(2, i);
-  //    var amplitude = Mathf.Pow(p, i);
-  //    total = total + InterpolatedNoise(x * frequency, y * frequency) * amplitude;
-  //  }
-  //  return total;
-  //}
-
-  //private float Noise(int x, int z)
-  //{
-  //  int n = x + z * 57;
-  //  n = (n << 13) ^ n;
-  //  return (float)(1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0);
-  //}
-
-  //private float SmoothedNoise(int x, int z)
-  //{
-  //  float corners = (Noise(x - 1, z - 1) + Noise(x + 1, z - 1) + Noise(x - 1, z + 1) + Noise(x + 1, z + 1)) / 16;
-  //  float sides = (Noise(x - 1, z) + Noise(x + 1, z) + Noise(x, z - 1) + Noise(x, z + 1)) / 8;
-  //  float center = Noise(x, z) / 4;
-  //  return corners + sides + center;
-  //}
-
-  //private float InterpolatedNoise(float x, float y)
-  //{
-  //  int integer_X = Mathf.FloorToInt(x);
-  //  float fractional_X = x - integer_X;
-
-  //  int integer_Y = Mathf.FloorToInt(y);
-  //  float fractional_Y = y - integer_Y;
-
-  //  float v1 = SmoothedNoise(integer_X, integer_Y);
-  //  float v2 = SmoothedNoise(integer_X + 1, integer_Y);
-  //  float v3 = SmoothedNoise(integer_X, integer_Y + 1);
-  //  float v4 = SmoothedNoise(integer_X + 1, integer_Y + 1);
-
-  //  float i1 = Interpolate(v1, v2, fractional_X);
-  //  float i2 = Interpolate(v3, v4, fractional_X);
-
-  //  return Interpolate(i1, i2, fractional_Y);
-  //}
-
-  //private float Interpolate(float a, float b, float x)
-  //{
-  //  float ft = x * 3.1415927f;
-  //  float f = (1 - Mathf.Cos(ft)) * 0.5f;
-  //  return a * (1 - f) + b * f;
-  //}
 }

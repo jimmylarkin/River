@@ -36,5 +36,12 @@ namespace Tests
       var test2 = tm.OctavePerlin(0.5f, 0.5f, 0, 1, 128, 4);
       Assert.AreEqual(test, test2);
     }
+
+    [TestMethod]
+    public void GenerateReturnsArrayOfData()
+    {
+      PerlinNoise tm = new PerlinNoise();
+      float[][] data = tm.Generate(0, 10, 0, 20, 10, 8, 128, 4);
+    }
   }
 }
