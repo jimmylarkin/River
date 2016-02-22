@@ -56,7 +56,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Models\GroundTests.cs" />
-    <Compile Include="Assets\Scripts\Models\PerlinNoiseTests.cs" />
     <Compile Include="Assets\Scripts\Models\LibNoiseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

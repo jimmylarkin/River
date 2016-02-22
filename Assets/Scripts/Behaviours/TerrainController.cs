@@ -5,11 +5,10 @@ namespace River
 {
   public class TerrainController : MonoBehaviour
   {
-    public float scaleHorizontal = 3000f;
-    public float scaleVertical = 500f;
-    public int octaves = 8;
-    public float startAmplitude = 128;
-    public float startFrequency = 4;
+    public float scaleVertical = 10f;
+    public int octaves = 6;
+    public float persistence = 0.35f;
+    public float frequency = 0.008f;
     Ground ground;
 
     private
@@ -17,9 +16,9 @@ namespace River
     // Use this for initialization
     void Start()
     {
-      ground = new Ground() { ScaleHorizontal = scaleHorizontal, ScaleVertical = scaleVertical, Octaves = octaves, StartAmplitude = startAmplitude, StartFrequency = startFrequency };
-      ground.Init2();
-      Debug.LogFormat("Start: Data buffer length is now {0}", ground.GroundData.Count);
+      ground = new Ground() { ScaleVertical = scaleVertical, Octaves = octaves, Persistence = persistence, Frequency = frequency };
+      ground.Init();
+      Debug.LogFormat("Start: Starting buffer length is {0}", ground.GroundData.Count);
       ground.Tiles = new GroundTile[transform.childCount];
       for (int i = 0; i < transform.childCount; i++)
       {
@@ -31,20 +30,16 @@ namespace River
           ground.Tiles[i].SetHeightmap(ground.GroundData, scaleVertical);
         }
       }
-      Debug.LogFormat("Start: Data buffer length is now {0}", ground.GroundData.Count);
+      Debug.LogFormat("Start: Data buffer after start is {0}", ground.GroundData.Count);
     }
 
     public void AdvanceTile()
     {
-      Debug.LogFormat("AdvanceTile: Data buffer length is now {0}", ground.GroundData.Count);
+      Debug.LogFormat("AdvanceTile: Data buffer before settign heightmaps is {0}", ground.GroundData.Count);
       ground.AdvanceTile();
       ground.Tiles[ground.Tiles.Length - 1].SetHeightmap(ground.GroundData, scaleVertical);
-      Debug.LogFormat("AdvanceTile: Data buffer length is now {0}", ground.GroundData.Count);
-    }
-
-    public void HeightmapSweep()
-    {
-      //ground.GenerateTerrainStripe(10);
+      Debug.LogFormat("AdvanceTile: Data buffer after setting heightmaps is {0}", ground.GroundData.Count);
+      ground.Bw.RunWorkerAsync();
     }
   }
 }
