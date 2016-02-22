@@ -18,13 +18,13 @@ namespace River
         float[] row = groundData.Dequeue();
         for (int k = 0; k < row.Length; k++)
         {
-          heights[i, k] = row[k] / scaleVertical;
+          heights[i, k] = row[k] * scaleVertical;
         }
       }
       float[] sharedRow = groundData.Peek();
       for (int k = 0; k < sharedRow.Length; k++)
       {
-        heights[TerrainObject.terrainData.heightmapHeight - 1, k] = sharedRow[k] / scaleVertical;
+        heights[TerrainObject.terrainData.heightmapHeight - 1, k] = sharedRow[k] * scaleVertical;
       }
       TerrainObject.terrainData.SetHeights(0, 0, heights);
     }

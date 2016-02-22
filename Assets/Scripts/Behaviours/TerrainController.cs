@@ -5,7 +5,7 @@ namespace River
 {
   public class TerrainController : MonoBehaviour
   {
-    public float scaleVertical = 10f;
+    public float scaleVertical = 0.02f;
     public int octaves = 6;
     public float persistence = 0.35f;
     public float frequency = 0.008f;
