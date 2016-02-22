@@ -1,0 +1,67 @@
+Mono path[0] = 'D:/Code/River/testbuild_Data/Managed'
+Mono path[1] = 'D:/Code/River/testbuild_Data/Mono'
+Mono config path = 'D:/Code/River/testbuild_Data/Mono/etc'
+PlayerConnection initialized from D:/Code/River/testbuild_Data (debug = 0)
+PlayerConnection initialized network socket : 0.0.0.0 55508
+Multi-casting "[IP] 192.168.1.98 [Port] 55508 [Flags] 3 [Guid] 1528180763 [EditorId] 3428016940 [Version] 1048832 [Id] WindowsPlayer(MSI) [Debug] 0" to [225.0.0.222:54997]...
+Waiting for connection from host on [192.168.1.98:55508]...
+PlayerConnection accepted from [192.168.1.98] handle:0x94
+PlayerConnection already initialized - listening to [192.168.1.98:55508]
+Initialize engine version: 5.3.2f1 (e87ab445ead0)
+[VRDevice] Initialization of device oculus failed.
+
+ 
+(Filename: C:/buildslave/unity/build/Runtime/VR/VRModule.cpp Line: 86)
+
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: Intel(R) HD Graphics 530 (ID=0x191b)
+    Vendor:   Intel
+    VRAM:     2111 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: D:\Code\River\testbuild_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading D:\Code\River\testbuild_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: D:\Code\River\testbuild_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading D:\Code\River\testbuild_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: D:\Code\River\testbuild_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading D:\Code\River\testbuild_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: D:\Code\River\testbuild_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading D:\Code\River\testbuild_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: D:\Code\River\testbuild_Data\Managed\LibNoise.dll (this message is harmless)
+Loading D:\Code\River\testbuild_Data\Managed\LibNoise.dll into Unity Child Domain
+- Completed reload, in  0.081 seconds
+Platform assembly: D:\Code\River\testbuild_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: D:\Code\River\testbuild_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 0.669629 ms
+[VRDevice] Initialization of device oculus failed.
+
+ 
+(Filename: C:/buildslave/unity/build/Runtime/VR/VRModule.cpp Line: 86)
+
+Start: Data buffer length is now 1537
+UnityEngine.DebugLogHandler:Internal_Log(LogType, String, Object)
+UnityEngine.DebugLogHandler:LogFormat(LogType, Object, String, Object[])
+UnityEngine.Logger:LogFormat(LogType, String, Object[])
+UnityEngine.Debug:LogFormat(String, Object[])
+River.TerrainController:Start() (at D:\Code\River\Assets\Scripts\Behaviours\TerrainController.cs:22)
+ 
+(Filename: D:/Code/River/Assets/Scripts/Behaviours/TerrainController.cs Line: 22)
+
+Start: Data buffer length is now 513
+UnityEngine.DebugLogHandler:Internal_Log(LogType, String, Object)
+UnityEngine.DebugLogHandler:LogFormat(LogType, Object, String, Object[])
+UnityEngine.Logger:LogFormat(LogType, String, Object[])
+UnityEngine.Debug:LogFormat(String, Object[])
+River.TerrainController:Start() (at D:\Code\River\Assets\Scripts\Behaviours\TerrainController.cs:34)
+ 
+(Filename: D:/Code/River/Assets/Scripts/Behaviours/TerrainController.cs Line: 34)
+
+Setting up 2 worker threads for Enlighten.
+  Thread -> id: 34c -> priority: 1 
+  Thread -> id: 3e50 -> priority: 1 
+Waiting for finish
