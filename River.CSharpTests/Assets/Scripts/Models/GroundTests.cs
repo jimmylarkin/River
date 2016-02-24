@@ -14,7 +14,7 @@ namespace Tests
     [TestMethod()]
     public void InitTest()
     {
-      Ground ground = new Ground() { ScaleHorizontal = 3000f, ScaleVertical = 500f, Octaves = 8, Persistence = 128, Frequency = 4 };
+      Ground ground = new Ground() { ScaleVertical = 500f, Octaves = 8, Persistence = 128, Frequency = 4 };
       ground.Init();
     }
   }

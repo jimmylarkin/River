@@ -10,7 +10,7 @@ namespace River
 
     public Terrain TerrainObject { get; set; }
 
-    public void SetHeightmap(Queue<float[]> groundData, float scaleVertical)
+    public void SetHeightmap(Queue<float[]> groundData)
     {
       float[,] heights = new float[TerrainObject.terrainData.heightmapWidth, TerrainObject.terrainData.heightmapHeight];
       for (int i = 0; i < TerrainObject.terrainData.heightmapHeight - 1; i++)
@@ -18,15 +18,20 @@ namespace River
         float[] row = groundData.Dequeue();
         for (int k = 0; k < row.Length; k++)
         {
-          heights[i, k] = row[k] * scaleVertical;
+          heights[i, k] = row[k];
         }
       }
       float[] sharedRow = groundData.Peek();
       for (int k = 0; k < sharedRow.Length; k++)
       {
-        heights[TerrainObject.terrainData.heightmapHeight - 1, k] = sharedRow[k] * scaleVertical;
+        heights[TerrainObject.terrainData.heightmapHeight - 1, k] = sharedRow[k];
       }
       TerrainObject.terrainData.SetHeights(0, 0, heights);
+    }
+
+    public int GetHeightmapResolution()
+    {
+      return TerrainObject.terrainData.heightmapResolution;
     }
   }
 }

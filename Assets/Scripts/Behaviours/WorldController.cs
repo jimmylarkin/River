@@ -29,10 +29,6 @@ namespace River
         controller.AdvanceTile();
         cameraOverTileIndex = newCameraOverTileIndex;
       }
-      //if (Mathf.FloorToInt(camera.transform.position.z) % 10 == 0)
-      //{
-      //  controller.HeightmapSweep();
-      //}
     }
   }
 }
