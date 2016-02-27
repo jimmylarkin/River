@@ -140,7 +140,7 @@ namespace River
         Debug.LogFormat("riverStart={0}, y={1}", riverStart, y);
         riverStart = 0;
       }
-      if (riverEnd > heightmapResolution -1 )
+      if (riverEnd > heightmapResolution - 1)
       {
         Debug.LogFormat("riverEnd={0}, y={1}", riverEnd, y);
         riverEnd = heightmapResolution - 1;
@@ -245,6 +245,162 @@ namespace River
 
         }
       }
+    }
+
+    public List<Vector3> verticesTemp = new List<Vector3>();
+    public List<Vector3> vertices = new List<Vector3>();
+    public List<Vector3> normals = new List<Vector3>();
+    public List<int> triangles = new List<int>();
+    public List<Vector4> tangents = new List<Vector4>();
+    public List<Vector2> uvs = new List<Vector2>();
+    public List<Color> colors = new List<Color>();
+    public int widthSegments;
+    public int heightSegments;
+    public int width;
+    public int height;
+
+    public void GenerateMeshData()
+    {
+      //float scaleX = (float)width / (float)widthSegments;
+      //float scaleZ = (float)height / (float)heightSegments;
+      //float ScaleY = (scaleX + scaleZ) / 2f;
+      //verticesTemp.Clear();
+      //vertices.Clear();
+      //normals.Clear();
+      //triangles.Clear();
+      //tangents.Clear();
+      //uvs.Clear();
+      //colors.Clear();
+      //for (int z = 0; z < heightSegments; z++)
+      //{
+      //  for (int x = 0; x < widthSegments; x++)
+      //  {
+      //    float y = (float)((module.GetValue((float)x, (float)z, 0) + 2) * ScaleVertical * ScaleY);
+      //    verticesTemp.Add(new Vector3(x * scaleX, y, z * scaleZ));
+      //  }
+      //}
+      //for (int z = 0; z < heightSegments; z++)
+      //{
+      //  for (int x = 0; x < widthSegments; x++)
+      //  {
+      //    if ((z % 2 == 0 && x % 2 != 0) || (z % 2 != 0 && x % 2 == 0))
+      //    {
+      //      CreateTrianglesAroundVertex(z * widthSegments + x);
+      //    }
+      //  }
+      //}
+
+      float scaleX = (float)width / (float)widthSegments;
+      float scaleZ = (float)height / (float)heightSegments;
+      float ScaleY = (scaleX + scaleZ) / 2f;
+      vertices.Clear();
+      normals.Clear();
+      triangles.Clear();
+      for (int z = 0; z < heightSegments; z++)
+      {
+        for (int x = 0; x < widthSegments; x++)
+        {
+          float y = (float)((module.GetValue((float)x, (float)z, 0) + 2) * ScaleVertical * ScaleY);
+          vertices.Add(new Vector3(x * scaleX, y, z * scaleZ));
+          normals.Add(new Vector3((float)z / (float)widthSegments, 1, 0));
+          tangents.Add(new Vector4(1f, 0f, 0f, -1f));
+          uvs.Add(new Vector2((float)x / (float)widthSegments, (float)z / (float)heightSegments));
+          colors.Add(Color.Lerp(Color.red, Color.green, (float)x / (float)widthSegments));
+          if ((z % 2 == 0 && x % 2 != 0) || (z % 2 != 0 && x % 2 == 0))
+          {
+            CreateTrianglesAroundVertex(z * widthSegments + x);
+          }
+        }
+      }
+    }
+
+    private void CreateTrianglesAroundVertex(int vertexIndex)
+    {
+      bool firstRow = vertexIndex < width;
+      bool lastRow = vertexIndex > (width * height - width - 1);
+      bool leftcolumn = vertexIndex % width == 0;
+      bool rightColumn = (vertexIndex + 1) % width == 0;
+
+      if (firstRow)
+      {
+        //first row and left column are invalid for this algorithm so not checkign it
+        if (!rightColumn)
+        {
+          //bottom right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + width);
+        }
+        //bottom left
+        TestVerticesAndAddTriangle(vertexIndex, vertexIndex + width, vertexIndex - 1);
+      }
+      else if (lastRow)
+      {
+        if (leftcolumn)
+        {
+          //top right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - width, vertexIndex + 1);
+        }
+        else
+        if (rightColumn)
+        {
+          //top left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - 1, vertexIndex - width);
+        }
+        else {
+          //top left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - 1, vertexIndex - width);
+          //top right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - width, vertexIndex + 1);
+        }
+      }
+      else
+      {
+        if (leftcolumn)
+        {
+          //top right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - width, vertexIndex + 1);
+          //bottom right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + width);
+        }
+        else
+        if (rightColumn)
+        {
+          //top left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - 1, vertexIndex - width);
+          //bottom left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex + width, vertexIndex - 1);
+        } else
+        {
+          //top left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - 1, vertexIndex - width);
+          //top right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex - width, vertexIndex + 1);
+          //bottom right
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + width);
+          //bottom left
+          TestVerticesAndAddTriangle(vertexIndex, vertexIndex + width, vertexIndex - 1);
+        }
+      }
+    }
+    private void TestVerticesAndAddTriangle(int index1, int index2, int index3)
+    {
+      triangles.Add(index3);
+      triangles.Add(index2);
+      triangles.Add(index1);
+      //vertices.Add(verticesTemp[index1]);
+      //vertices.Add(verticesTemp[index2]);
+      //vertices.Add(verticesTemp[index3]);
+      //triangles.Add(vertices.Count - 2);
+      //triangles.Add(vertices.Count - 3);
+      //triangles.Add(vertices.Count - 1);
+      //uvs.Add(new Vector2(verticesTemp[index1].x, verticesTemp[index1].z));
+      //uvs.Add(new Vector2(verticesTemp[index2].x, verticesTemp[index2].z));
+      //uvs.Add(new Vector2(verticesTemp[index3].x, verticesTemp[index3].z));
+      ////normals.Add(Vector3.up);
+      ////normals.Add(Vector3.up);
+      ////normals.Add(Vector3.up);
+      ////tangents.Add(new Vector4(1f, 0f, 0f, -1f));
+      ////tangents.Add(new Vector4(1f, 0f, 0f, -1f));
+      ////tangents.Add(new Vector4(1f, 0f, 0f, -1f));
     }
   }
 }
