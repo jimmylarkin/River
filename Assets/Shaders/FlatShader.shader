@@ -1,134 +1,53 @@
-﻿Shader "Custom/FlatShader" {
-	Properties {
-		_Color("Diffuse Material Color", Color) = (1,1,1,1)
-		_SpecColor("Specular Material Color", Color) = (1,1,1,1)
-		_Shininess("Shininess", Float) = 10
+﻿Shader "Custom/FlatVertexColorShader" {
+	Properties{
 	}
-		SubShader {
-		Pass{
-		Tags{ "LightMode" = "ForwardBase" } // pass for
-																				// 4 vertex lights, ambient light & first pixel light
+		SubShader{
+			Pass {
+				Tags {"LightMode"="ForwardBase"}
 
-		CGPROGRAM
-#pragma target 3.0
-#pragma multi_compile_fwdbase
-#pragma vertex vert
-#pragma fragment frag
+				CGPROGRAM
+				#pragma vertex vert
+				#pragma fragment frag
+				#include "UnityCG.cginc" // for UnityObjectToWorldNormal
+            	#include "UnityLightingCommon.cginc" // for _LightColor0
 
-#include "UnityCG.cginc"
-		uniform float4 _LightColor0;
-	// color of light source (from "Lighting.cginc")
+				//user defined variables
+				uniform float4 _Color;
 
-	// User-specified properties
-	uniform float4 _Color;
-	uniform float4 _SpecColor;
-	uniform float _Shininess;
+				struct v2f 
+				{
+					float4 pos: SV_POSITION;
+					fixed3 color : COLOR0;
+					float4 posWorld : TEXCOORD1;
+					float4 normal : TEXCOORD2;
+				};
 
-	struct vertexInput {
-		float4 vertex : POSITION;
-		float3 normal : NORMAL;
-	};
-	struct vertexOutput {
-		float4 pos : SV_POSITION;
-		float4 posWorld : TEXCOORD0;
-		float3 normalDir : TEXCOORD1;
-		float3 vertexLighting : TEXCOORD2;
-	};
+				v2f vert(appdata_full v)
+				{
+					v2f o;
+					o.posWorld = mul(_Object2World, v.vertex);
+					o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+					// half3 worldNormal = UnityObjectToWorldNormal(v.normal);
+					// half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+					// fixed3 difussedReflection = nl * _LightColor0;
+					// fixed3 finalColor = difussedReflection + UNITY_LIGHTMODEL_AMBIENT.xyz;
+					o.color =  v.color;// * _Color.rgb;// * v.color;
+					return o;
+				}
 
-	vertexOutput vert(vertexInput input)
-	{
-		vertexOutput output;
-
-		float4x4 modelMatrix = _Object2World;
-		float4x4 modelMatrixInverse = _World2Object;
-		// unity_Scale.w is unnecessary here
-
-		output.posWorld = mul(modelMatrix, input.vertex);
-		output.normalDir = normalize(
-			mul(float4(input.normal, 0.0), modelMatrixInverse).xyz);
-		output.pos = mul(UNITY_MATRIX_MVP, input.vertex);
-
-		// Diffuse reflection by four "vertex lights"            
-		output.vertexLighting = float3(0.0, 0.0, 0.0);
-#ifdef VERTEXLIGHT_ON
-		for (int index = 0; index < 4; index++)
-		{
-			float4 lightPosition = float4(unity_4LightPosX0[index],
-				unity_4LightPosY0[index],
-				unity_4LightPosZ0[index], 1.0);
-
-			float3 vertexToLightSource =
-				lightPosition.xyz - output.posWorld.xyz;
-			float3 lightDirection = normalize(vertexToLightSource);
-			float squaredDistance =
-				dot(vertexToLightSource, vertexToLightSource);
-			float attenuation = 1.0 / (1.0 +
-				unity_4LightAtten0[index] * squaredDistance);
-			float3 diffuseReflection = attenuation
-				* unity_LightColor[index].rgb * _Color.rgb
-				* max(0.0, dot(output.normalDir, lightDirection));
-
-			output.vertexLighting =
-				output.vertexLighting + diffuseReflection;
+	            fixed4 frag(v2f i) : COLOR
+	            {
+	            	float3 posddx = ddx(i.posWorld.xyz);
+                    float3 posddy = ddy(i.posWorld.xyz);
+                    float3 derivedNormal = cross(normalize(posddy), normalize(posddx));
+					half3 worldNormal = UnityObjectToWorldNormal(derivedNormal);
+					half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+                    fixed3 difussedReflection = nl * _LightColor0.rgb;
+					fixed3 finalColor = difussedReflection + UNITY_LIGHTMODEL_AMBIENT.xyz;
+                    return fixed4(finalColor * i.color, 1.0);
+                    //return fixed4(i.color, 1.0);
+	            }
+			ENDCG
 		}
-#endif
-		return output;
-	}
-
-	float4 frag(vertexOutput input) : COLOR
-	{
-		float3 posddx = ddx(input.posWorld.xyz);
-		float3 posddy = ddy(input.posWorld.xyz);
-		float3 derivedNormal = cross(normalize(posddx), normalize(posddy));
-
-		// float3 normalDirection = normalize(input.normalDir);
-		float3 normalDirection = normalize(derivedNormal);
-		float3 viewDirection = normalize(
-			_WorldSpaceCameraPos - input.posWorld.xyz);
-		float3 lightDirection;
-		float attenuation;
-
-		if (0.0 == _WorldSpaceLightPos0.w) // directional light?
-		{
-			attenuation = 1.0; // no attenuation
-			lightDirection =
-				normalize(_WorldSpaceLightPos0.xyz);
-		}
-		else // point or spot light
-		{
-			float3 vertexToLightSource =
-				_WorldSpaceLightPos0.xyz - input.posWorld.xyz;
-			float distance = length(vertexToLightSource);
-			attenuation = 1.0 / distance; // linear attenuation
-			lightDirection = normalize(vertexToLightSource);
-		}
-
-		float3 ambientLighting =
-			UNITY_LIGHTMODEL_AMBIENT.rgb * _Color.rgb;
-
-		float3 diffuseReflection =
-			attenuation * _LightColor0.rgb * _Color.rgb
-			* max(0.0, dot(normalDirection, lightDirection));
-
-		float3 specularReflection;
-		if (dot(normalDirection, lightDirection) < 0.0)
-			// light source on the wrong side?
-		{
-			specularReflection = float3(0.0, 0.0, 0.0);
-			// no specular reflection
-		}
-		else // light source on the right side
-		{
-			specularReflection = attenuation * _LightColor0.rgb
-				* _SpecColor.rgb * pow(max(0.0, dot(
-					reflect(-lightDirection, normalDirection),
-					viewDirection)), _Shininess);
-		}
-
-		return float4(input.vertexLighting + ambientLighting
-			+ diffuseReflection + specularReflection, 1.0);
-	}
-		ENDCG
-	}
 	}
 }
