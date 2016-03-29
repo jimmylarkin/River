@@ -5,22 +5,7 @@ using System.Collections.Generic;
 using LibNoise;
 using LibNoise.Modifiers;
 using System.Diagnostics;
-
-[DebuggerDisplay("{Vertex1} | {Vertex2} | {Vertex3}")]
-public class Triangle
-{
-  public Vertex Vertex1 { get; set; }
-  public Vertex Vertex2 { get; set; }
-  public Vertex Vertex3 { get; set; }
-}
-
-[DebuggerDisplay("{Id} ({Coords})")]
-public class Vertex
-{
-  public int Id { get; set; }
-  public Vector3 Coords { get; set; }
-  public Vector3 Normal { get; set; }
-}
+using MIConvexHull;
 
 public class TerrainMeshGenerator
 {
@@ -89,12 +74,6 @@ public class TerrainMeshGenerator
       Lacunarity = 2.5,
       Persistence = persistence
     };
-    //perlin.Frequency = frequency;
-    //perlin.NoiseQuality = NoiseQuality.Standard;
-    //perlin.Seed = 0;
-    //perlin.OctaveCount = octaves;
-    //perlin.Lacunarity = 2.5;
-    //perlin.Persistence = persistence;
 
     Billow billow = new Billow();
     billow.Frequency = perlin.Frequency;
@@ -130,22 +109,12 @@ public class TerrainMeshGenerator
         float worldX = (x - widthSegments / 2) * scaleX;
         float worldY = (float)scaledModule.GetValue(worldX, 0, worldZ);
         CreateCell(x, z, new Vector3(worldX, worldY, worldZ), x == widthSegments - 1 || z == heightSegments - 1);
-
-        //if (scaledX > riverData.Shore.Left && scaledX < riverData.Shore.Right)
-        //{
-        //  scaledY = -1 * scale;
-        //}
-        //TesselateCell(x, z, scaledX, scaledY, scaledZ, scaleX, scaleZ);
-        //        vertices.Add(new Vector4(scaledX, scaledY, scaledZ));
         //Vector4 tangent = new Vector4(worldX, 0f, 0f, -1f);
         //tangent.Normalize();
         //tangents.Add(tangent);
         //uvs.Add(new Vector2(x * scaleX / (float)widthSegments, z * scaleZ / (float)heightSegments));
         //colors.Add(Color.Lerp(Color.red, Color.green, (float)x / (float)widthSegments));
       }
-
-
-      //RiverPathData rowRiverData = riverGen.Generate(worldZ);
     }
 
     //CREATE RIVER SHAPE
@@ -160,11 +129,6 @@ public class TerrainMeshGenerator
         float midZ = leftCell.VertexA.Coords.z * 0.5f + leftCell.VertexD.Coords.z * 0.5f;
         leftCell.DropAreaLeft(new Vector3(riverData.Shore.Left, midY, midZ));
         leftCell.DropAreaRight(new Vector3(riverData.Shore.Left, midY, midZ));
-        //  leftCell = leftCell.Right;
-        //  float midY = leftCell.VertexA.Coords.y * 0.25f + leftCell.VertexB.Coords.y * 0.25f + leftCell.VertexC.Coords.y * 0.25f + leftCell.VertexD.Coords.y * 0.25f;
-        //  float deltaY = midY - waterlevel;
-        //  leftCell.DropArea(deltaY, waterlevel + 2f, riverData.Shore.Left);
-        //  leftCell = leftCell.Left;
       }
       Cell rightCell = FindCell(riverData.Shore.Right, z);
       if (rightCell != null && rightCell.VertexA != null && rightCell.VertexB != null && rightCell.VertexC != null && rightCell.VertexD != null)
@@ -173,20 +137,18 @@ public class TerrainMeshGenerator
         float midZ = rightCell.VertexA.Coords.z * 0.5f + rightCell.VertexD.Coords.z * 0.5f;
         leftCell.DropAreaLeft(new Vector3(riverData.Shore.Right, midY, midZ));
         rightCell.DropAreaRight(new Vector3(riverData.Shore.Right, midY, midZ));
-        //  rightCell = rightCell.Left;
-        //  float midY = rightCell.VertexA.Coords.y * 0.25f + rightCell.VertexB.Coords.y * 0.25f + rightCell.VertexC.Coords.y * 0.25f + rightCell.VertexD.Coords.y * 0.25f;
-        //  float deltaY = midY - waterlevel;
-        //  rightCell.DropArea(deltaY, waterlevel + 2f, riverData.Shore.Right);
-        //  rightCell = rightCell.Left;
       }
     }
 
+    var config = new TriangulationComputationConfig();
+    var tetrahedrons = Triangulation.CreateDelaunay<Vertex, DefaultTriangulationCell<Vertex>>(vertices, config).Cells;
+
     //CREATE TRIANGLES FOR EACH CELL
-    foreach (Cell cell in cells)
-    {
-      var newVertices = cell.Tesselate2(ref vertexIndex);
-      vertices.AddRange(newVertices);
-    }
+    //foreach (Cell cell in cells)
+    //{
+    //  var newVertices = cell.Tesselate2(ref vertexIndex);
+    //  vertices.AddRange(newVertices);
+    //}
     //NORMALS
     foreach (Cell cell in cells)
     {
