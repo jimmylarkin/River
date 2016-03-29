@@ -6,14 +6,11 @@ namespace River
 {
   public class TerrainController : MonoBehaviour
   {
-    public float scaleVertical = 0.02f;
-    public int octaves = 6;
+    public float scaleVertical = 15f;
     public float persistence = 0.35f;
-    public float frequency = 0.008f;
-    public float riverPersistence = 0.35f;
-    public float riverFrequency = 0.008f;
-    public int width = 10;
-    public int height = 10;
+    public float frequency = 0.015f;
+    public int width = 100;
+    public int height = 100;
     Ground ground;
 
     private
@@ -21,16 +18,9 @@ namespace River
     // Use this for initialization
     void Awake()
     {
-      ground = new Ground()
-      {
-        ScaleVertical = scaleVertical,
-        Octaves = octaves,
-        Persistence = persistence,
-        Frequency = frequency,
-        RiverFrequency = riverFrequency,
-        RiverPersistence = riverPersistence
-      };
-      ground.Init();
+      ground = new Ground() { ScaleVertical = scaleVertical };
+      ground.Perlin1.Frequency = frequency;
+      ground.Perlin1.Persistence = persistence;
       ground.GenerateData(0, width, 0, height);
       MeshFilter meshFilter = transform.gameObject.GetComponent<MeshFilter>();
       if (meshFilter == null)
@@ -41,11 +31,12 @@ namespace River
       Debug.Log(mesh.bounds);
       List<Vector3> newVertices = new List<Vector3>(mesh.vertices.Length);
       List<Vector3> newNormals = new List<Vector3>(mesh.normals.Length);
+      List<Color> newColors = new List<Color>();
       int vertexIndex = 0;
-      while (ground.GroundData.Count > 0)
+      foreach (Vector4 data in ground.GroundData)
       {
-        float data = ground.GroundData.Dequeue();
-        newVertices.Add(new Vector3(mesh.vertices[vertexIndex].x, data, mesh.vertices[vertexIndex].z));
+        newVertices.Add(new Vector3(mesh.vertices[vertexIndex].x, data.x, mesh.vertices[vertexIndex].z));
+        newColors.Add(new Color(data.y, data.z, data.w));
         vertexIndex++;
       }
 
@@ -65,6 +56,7 @@ namespace River
       }
       mesh.vertices = newVertices.ToArray();
       mesh.normals = newNormals.ToArray();
+      mesh.colors = newColors.ToArray();
       mesh.RecalculateBounds();
       mesh.Optimize();
       Debug.Log(mesh.bounds);

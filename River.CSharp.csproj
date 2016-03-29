@@ -73,32 +73,15 @@
     <Compile Include="Assets\Scripts\Behaviours\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Behaviours\TerrainController.cs" />
     <Compile Include="Assets\Scripts\Behaviours\WorldController.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Edge.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\EdgeList.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\EdgeReorderer.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Halfedge.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\HalfedgePriorityQueue.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\ICoord.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\LR.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Site.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\SiteList.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Triangle.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Vertex.cs" />
-    <Compile Include="Assets\Scripts\Delaunay\Voronoi.cs" />
-    <Compile Include="Assets\Scripts\Geom\Circle.cs" />
-    <Compile Include="Assets\Scripts\Geom\LineSegment.cs" />
-    <Compile Include="Assets\Scripts\Geom\Polygon.cs" />
-    <Compile Include="Assets\Scripts\Geom\Rectf.cs" />
-    <Compile Include="Assets\Scripts\Geom\Vector2f.cs" />
-    <Compile Include="Assets\Scripts\Geom\Winding.cs" />
     <Compile Include="Assets\Scripts\Models\Ground.cs" />
     <Compile Include="Assets\Scripts\Models\GroundTile.cs" />
     <Compile Include="Assets\Scripts\Perlin.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Imported\WWII P47 Thunderbolt\aeroplanes.shader" />
-    <None Include="Assets\Shaders\FlatShader.shader" />
+    <None Include="Assets\Shaders\FlatTexturedShader.shader" />
+    <None Include="Assets\Shaders\FlatVertexColorShader.shader" />
+    <None Include="Assets\Shaders\Test.shader" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

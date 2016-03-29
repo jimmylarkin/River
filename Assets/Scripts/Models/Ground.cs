@@ -5,13 +5,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using LibNoise;
+using LibNoise.Modifiers;
 
 namespace River
 {
   public class Ground
   {
     private float heightAdjustment = 0;
-    private IModule module = null;
     private int heightmapResolution;
     private float heightmapToWorldScale = 1;
     private IModule riverModuleLeft = null;
@@ -21,36 +21,33 @@ namespace River
     private int lastDataRowIndex;
     private int riverCenterPoint = 0;
 
+    public Perlin Perlin1 { get; set; }
+
     public BackgroundWorker Bw { get; private set; }
 
-    public Queue<float> GroundData { get; set; }
+    public List<Vector4> GroundData { get; set; }
 
     public float ScaleVertical { get; set; }
-
-    public int Octaves { get; set; }
-
-    public float Persistence { get; set; }
-
-    public float RiverPersistence { get; set; }
-
-    public float Frequency { get; set; }
-
-    public float RiverFrequency { get; set; }
 
     public GroundTile[] Tiles { get; set; }
 
     public float[] LastDataRow { get; set; }
 
-    public float TileWidth { get; set; }
-
-    public float TileHeight { get; set; }
-
     public Ground()
     {
-      Bw = new BackgroundWorker();
-      GroundData = new Queue<float>(20000);
-      Bw.DoWork += Bw_DoWork;
-      Bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
+      Perlin1 = new Perlin()
+      {
+        Frequency = 0.015f,
+        NoiseQuality = NoiseQuality.Standard,
+        Seed = 0,
+        OctaveCount = 6,
+        Lacunarity = 2.5,
+        Persistence = 0.35f
+      };
+      GroundData = new List<Vector4>();
+      //Bw = new BackgroundWorker();
+      //Bw.DoWork += Bw_DoWork;
+      //Bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
       lastDataRowIndex = 0;
     }
 
@@ -64,91 +61,74 @@ namespace River
 
     private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
     {
-      Debug.LogFormat("Bw_RunWorkerCompleted: Data buffer after completion is {0}", GroundData.Count);
+
     }
 
-
-    public void Init()
+    public void GenerateData(int xFrom, int xSize, int zFrom, int zSize)
     {
-      module = new Perlin();
-      ((Perlin)module).Frequency = Frequency;
-      ((Perlin)module).NoiseQuality = NoiseQuality.Standard;
-      ((Perlin)module).Seed = 0;
-      ((Perlin)module).OctaveCount = Octaves;
-      ((Perlin)module).Lacunarity = 2.5;
-      ((Perlin)module).Persistence = Persistence;
+      Billow billow = new Billow();
+      billow.Frequency = Perlin1.Frequency;
+      billow.NoiseQuality = NoiseQuality.High;
+      billow.Seed = 1;
+      billow.OctaveCount = 6;
+      billow.Lacunarity = Perlin1.Lacunarity;
+      billow.Persistence = Perlin1.Persistence;
 
-      riverModuleLeft = new Perlin();
-      ((Perlin)riverModuleLeft).Frequency = RiverFrequency;
-      ((Perlin)riverModuleLeft).NoiseQuality = NoiseQuality.Standard;
-      ((Perlin)riverModuleLeft).Seed = 568467;
-      ((Perlin)riverModuleLeft).OctaveCount = Octaves;
-      ((Perlin)riverModuleLeft).Lacunarity = 2.5;
-      ((Perlin)riverModuleLeft).Persistence = RiverPersistence;
+      RidgedMultifractal rmf = new RidgedMultifractal();
+      rmf.Frequency = Perlin1.Frequency;
+      rmf.NoiseQuality = NoiseQuality.High;
+      rmf.Seed = 2;
+      rmf.OctaveCount = 6;
+      rmf.Lacunarity = 5;
 
-      riverModuleRight = new Perlin();
-      ((Perlin)riverModuleRight).Frequency = RiverFrequency;
-      ((Perlin)riverModuleRight).NoiseQuality = NoiseQuality.Standard;
-      ((Perlin)riverModuleRight).Seed = 12312;
-      ((Perlin)riverModuleRight).OctaveCount = Octaves;
-      ((Perlin)riverModuleRight).Lacunarity = 2.5;
-      ((Perlin)riverModuleRight).Persistence = RiverPersistence;
+      Select module = new Select(Perlin1, rmf, billow) { EdgeFalloff = 0 };
+      module.SetBounds(-0.75, 0.75);
 
-      riverModuleSpread = new Perlin();
-      ((Perlin)riverModuleSpread).Frequency = RiverFrequency;
-      ((Perlin)riverModuleSpread).NoiseQuality = NoiseQuality.Standard;
-      ((Perlin)riverModuleSpread).Seed = 45645;
-      ((Perlin)riverModuleSpread).OctaveCount = Octaves;
-      ((Perlin)riverModuleSpread).Lacunarity = 2.5;
-      ((Perlin)riverModuleSpread).Persistence = RiverPersistence;
-    }
+      Add addModule = new Add(Perlin1, rmf);
 
-    public void GenerateData(int xFrom, int xSize, int yFrom, int ySize)
-    {
-      for (int y = yFrom; y < ySize; y++)
+      ScaleOutput scaledModule = new ScaleOutput(addModule, ScaleVertical);
+
+      //this is to set zero level and green color only, to be removed later
+      for (int z = zFrom; z < zSize; z++)
       {
-        //float[] xData = new float[xSize];
         for (int x = xFrom; x < xSize; x++)
         {
-          float val = (float)((module.GetValue(x, y, 0) + 2) * ScaleVertical + heightAdjustment);
-          //xData[x] = val;
-          GroundData.Enqueue(val);
+          float val = (float)(scaledModule.GetValue(x, z, 0));
+          GroundData.Add(new Vector4(val, 0f, 104f / 256f, 10f / 256f));
         }
         lastDataRowIndex++;
-        //AddRiverShape(xData, y);
       }
-      //Debug.LogFormat("GenerateData: Data buffer after generation is {0}", GroundData.Count);
     }
 
     private void AddRiverShape(float[] xData, int y)
     {
-      float scale = heightmapResolution * 0.25f;
-      float lineScale = heightmapResolution * 0.2f;
-      float minwidth = 20 / heightmapToWorldScale;
-      //GetValue gives value from range roughly -2.5 - + 2.5
-      float riverLine = heightmapResolution / 2 + (float)riverModuleLeft.GetValue(20, y + 30, 0) * lineScale;
-      float riverWidth = minwidth + ((float)riverModuleRight.GetValue(70, y - 60, 0) + 1) * scale + (float)riverModuleSpread.GetValue(120, y + 90, 0) * scale * 0.5f;
-      if (riverWidth < minwidth)
-      {
-        Debug.LogFormat("riverWidth = {0}, y={1}", riverWidth, y);
-        riverWidth = minwidth;
-      }
-      int riverStart = Mathf.RoundToInt(riverLine - riverWidth / 2);
-      int riverEnd = Mathf.RoundToInt(riverLine + riverWidth / 2);
-      if (riverStart < 0)
-      {
-        Debug.LogFormat("riverStart={0}, y={1}", riverStart, y);
-        riverStart = 0;
-      }
-      if (riverEnd > heightmapResolution - 1)
-      {
-        Debug.LogFormat("riverEnd={0}, y={1}", riverEnd, y);
-        riverEnd = heightmapResolution - 1;
-      }
-      for (int x = riverStart; x <= riverEnd; x++)
-      {
-        xData[x] = 0f;
-      }
+      //float scale = heightmapResolution * 0.25f;
+      //float lineScale = heightmapResolution * 0.2f;
+      //float minwidth = 20 / heightmapToWorldScale;
+      ////GetValue gives value from range roughly -2.5 - + 2.5
+      //float riverLine = heightmapResolution / 2 + (float)riverModuleLeft.GetValue(20, y + 30, 0) * lineScale;
+      //float riverWidth = minwidth + ((float)riverModuleRight.GetValue(70, y - 60, 0) + 1) * scale + (float)riverModuleSpread.GetValue(120, y + 90, 0) * scale * 0.5f;
+      //if (riverWidth < minwidth)
+      //{
+      //  Debug.LogFormat("riverWidth = {0}, y={1}", riverWidth, y);
+      //  riverWidth = minwidth;
+      //}
+      //int riverStart = Mathf.RoundToInt(riverLine - riverWidth / 2);
+      //int riverEnd = Mathf.RoundToInt(riverLine + riverWidth / 2);
+      //if (riverStart < 0)
+      //{
+      //  Debug.LogFormat("riverStart={0}, y={1}", riverStart, y);
+      //  riverStart = 0;
+      //}
+      //if (riverEnd > heightmapResolution - 1)
+      //{
+      //  Debug.LogFormat("riverEnd={0}, y={1}", riverEnd, y);
+      //  riverEnd = heightmapResolution - 1;
+      //}
+      //for (int x = riverStart; x <= riverEnd; x++)
+      //{
+      //  xData[x] = 0f;
+      //}
       //if (x == riverStart)
       //{
       //  float slopeStart = xData[x - slopeStartDistance];
