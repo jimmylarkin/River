@@ -32,7 +32,7 @@
 			{
 				float4 pos: SV_POSITION;
 				fixed3 color : COLOR0;  //vertex color
-				float4 posWorld : TEXCOORD2;
+				float4 posWorld : TEXCOORD0;
 				SHADOW_COORDS(1) // put shadows data into TEXCOORD1
 			};
 
@@ -42,6 +42,7 @@
 				o.posWorld = mul(_Object2World, v.vertex);
 				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 				o.color =  v.color;
+				TRANSFER_SHADOW(o);
 				return o;
 			}
 

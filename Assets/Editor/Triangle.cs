@@ -1,12 +1,10 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using MIConvexHull;
 
 [DebuggerDisplay("{Vertex1} | {Vertex2} | {Vertex3}")]
-public class Triangle
+public class Triangle<TVertex> : TriangulationCell<TVertex, Triangle<TVertex>>
+      where TVertex : Vertex
 {
-  public Vertex Vertex1 { get; set; }
-  public Vertex Vertex2 { get; set; }
-  public Vertex Vertex3 { get; set; }
 }

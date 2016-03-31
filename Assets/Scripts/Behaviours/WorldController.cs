@@ -5,7 +5,7 @@ namespace River
 {
   public class WorldController : MonoBehaviour
   {
-    public GameObject camera;
+    public GameObject mainCamera;
     public GameObject terrainController;
     public float speed = 30;  //world units per second
 
@@ -21,8 +21,8 @@ namespace River
     void Update()
     {
       var distance = Time.deltaTime * speed;
-      camera.transform.Translate(0, 0, distance, Space.World);
-      var newCameraOverTileIndex = Mathf.FloorToInt(camera.transform.position.z / terrainTileSize);
+      mainCamera.transform.Translate(0, 0, distance, Space.World);
+      var newCameraOverTileIndex = Mathf.FloorToInt(mainCamera.transform.position.z / terrainTileSize);
       TerrainController controller = terrainController.GetComponent<TerrainController>();
       if (newCameraOverTileIndex > cameraOverTileIndex)
       {

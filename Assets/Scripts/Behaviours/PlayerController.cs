@@ -4,7 +4,6 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
-  private Quaternion currentRotation;
   Rigidbody rb;
 
   public float horizontalSpeed = 1000;
@@ -13,7 +12,6 @@ public class PlayerController : MonoBehaviour
   void Start()
   {
     rb = GetComponent<Rigidbody>();
-    currentRotation = rb.rotation;
   }
 
   // Update is called once per frame

@@ -46,7 +46,7 @@
 				o.color =  v.color;
 				o.offset = v.texcoord1;
 				// compute shadows data
-                TRANSFER_SHADOW(o)
+                TRANSFER_SHADOW(o);
 				return o;
 			}
 

@@ -10,16 +10,17 @@ public class Vertex : IVertex
   public int Id { get; set; }
   public Vector3 Coords { get; set; }
   public Vector3 Normal { get; set; }
+  public Color Color { get; set; }
 
   public double[] Position
   {
     get
     {
-      return new double[3] { Coords.x, Coords.y, Coords.z };
+      return new double[2] { Coords.x, Coords.z };
     }
     set
     {
-      Coords = new Vector3((float)value[0], (float)value[1], (float)value[2]); 
+      Coords = new Vector3((float)value[0], Coords.y, (float)value[1]); 
     }
   }
 }

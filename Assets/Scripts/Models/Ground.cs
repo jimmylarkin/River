@@ -11,15 +11,7 @@ namespace River
 {
   public class Ground
   {
-    private float heightAdjustment = 0;
-    private int heightmapResolution;
-    private float heightmapToWorldScale = 1;
-    private IModule riverModuleLeft = null;
-    private IModule riverModuleRight = null;
-    private IModule riverModuleSpread = null;
-
     private int lastDataRowIndex;
-    private int riverCenterPoint = 0;
 
     public Perlin Perlin1 { get; set; }
 
@@ -53,10 +45,10 @@ namespace River
 
     private void Bw_DoWork(object sender, DoWorkEventArgs e)
     {
-      int startFrom = lastDataRowIndex + 1;
-      int xSize = heightmapResolution;
-      int ySize = startFrom + heightmapResolution - 1;
-      GenerateData(0, xSize, startFrom, ySize);
+      //int startFrom = lastDataRowIndex + 1;
+      //int xSize = heightmapResolution;
+      //int ySize = startFrom + heightmapResolution - 1;
+      //GenerateData(0, xSize, startFrom, ySize);
     }
 
     private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -200,32 +192,6 @@ namespace River
       //tileToBump.TerrainObject.transform.Translate(0, 0, 500 * Tiles.Length);
       //tileToBump.SetHeightmap(GroundData);
       //Tiles[Tiles.Length - 1] = tileToBump;
-    }
-
-    private void FindAndSetHeightAdjustment()
-    {
-      heightAdjustment = 0;
-      //heightAdjustment = float.MaxValue;
-      //foreach (float[] floatVar in GroundData)
-      //{
-      //  for (int i = 0; i < floatVar.Length; i++)
-      //  {
-      //    if (floatVar[i] < heightAdjustment && floatVar[i] != 0)
-      //    {
-      //      heightAdjustment = floatVar[i];
-      //    }
-      //  }
-      //}
-      //heightAdjustment = heightAdjustment > 0 ? heightAdjustment - 0.02f : heightAdjustment + 0.02f;
-      //Debug.LogFormat("Height adjustment={0}", heightAdjustment);
-      //foreach (float[] floatVar in GroundData)
-      //{
-      //  for (int i = 0; i < floatVar.Length; i++)
-      //  {
-      //    floatVar[i] = floatVar[i] - heightAdjustment;
-
-      //  }
-      //}
     }
   }
 }

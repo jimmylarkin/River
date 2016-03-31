@@ -3,8 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
-public class Shores
+public class ChannelData
 {
   public float Left { get; set; }
   public float Right { get; set; }
@@ -13,7 +14,8 @@ public class Shores
 public class RiverPathData
 {
   public float Z { get; set; }
-  public Shores Shore { get; set; }
+  public ChannelData LeftChannel { get; set; }
+  public ChannelData RightChannel { get; set; }
 }
 
 public class RiverGenerator
@@ -24,7 +26,8 @@ public class RiverGenerator
   private float frequency = 0.005f;
   private Perlin perlinLeft;
   private Perlin perlinRight;
-  private Perlin perlinDistance;
+  private Perlin perlinLeftWidth;
+  private Perlin perlinRightWidth;
 
   public RiverGenerator()
   {
@@ -44,23 +47,33 @@ public class RiverGenerator
     perlinRight.Lacunarity = 1.4;
     perlinRight.Persistence = persistence;
 
-    perlinDistance = new Perlin();
-    perlinDistance.Frequency = frequency;
-    perlinDistance.NoiseQuality = NoiseQuality.Standard;
-    perlinDistance.Seed = DateTime.Now.Millisecond / 2;
-    perlinDistance.OctaveCount = octaves;
-    perlinDistance.Lacunarity = 1.2;
-    perlinDistance.Persistence = persistence;
+    perlinLeftWidth = new Perlin();
+    perlinLeftWidth.Frequency = frequency;
+    perlinLeftWidth.NoiseQuality = NoiseQuality.Standard;
+    perlinLeftWidth.Seed = DateTime.Now.Millisecond / 5;
+    perlinLeftWidth.OctaveCount = octaves;
+    perlinLeftWidth.Lacunarity = 1.2;
+    perlinLeftWidth.Persistence = persistence;
+
+    perlinRightWidth = new Perlin();
+    perlinRightWidth.Frequency = frequency;
+    perlinRightWidth.NoiseQuality = NoiseQuality.Standard;
+    perlinRightWidth.Seed = DateTime.Now.Millisecond * 3;
+    perlinRightWidth.OctaveCount = octaves;
+    perlinRightWidth.Lacunarity = 1.2;
+    perlinRightWidth.Persistence = persistence;
   }
 
 
   public RiverPathData Generate(float z)
   {
     RiverPathData result = new RiverPathData { Z = z };
-    float distance = (float)perlinDistance.GetValue(0, 0, z) * scale;
-    float leftShore = (float)perlinLeft.GetValue(0, 0, z + 100) * scale;
-    float rightShore = (float)perlinRight.GetValue(0, 0, z + 200) * scale;
-    result.Shore = new Shores { Left = leftShore - distance, Right = leftShore + distance };
+    float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, z)) * scale + scale;
+    float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, z)) * scale + scale;
+    float leftShore = (float)perlinLeft.GetValue(0, 0, z + 100) * scale - scale * 0.7f;
+    float rightShore = (float)perlinRight.GetValue(0, 0, z + 200) * scale + scale * 0.7f;
+    result.LeftChannel = new ChannelData { Left = leftShore, Right = leftShore + leftWidth };
+    result.RightChannel = new ChannelData { Left = rightShore, Right = rightShore + rightWidth };
     return result;
   }
 }
