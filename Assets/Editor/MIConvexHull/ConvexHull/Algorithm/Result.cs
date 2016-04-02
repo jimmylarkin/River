@@ -115,7 +115,8 @@ namespace MIConvexHull
                 {
                     Vertices = vertices,
                     Adjacency = new TFace[Dimension],
-                    Normal = IsLifted ? null : face.Normal
+                    Id = face.Index
+                    //Normal = IsLifted ? null : face.Normal
                 };
                 face.Tag = i;
             }

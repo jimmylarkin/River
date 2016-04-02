@@ -11,9 +11,9 @@ public class CreateTerrain : ScriptableWizard
   private static Camera lastUsedCam;
 
   public int widthSegments = 100;
-  public int heightSegments = 100;
+  public int heightSegments = 200;
   public int width = 100;
-  public int height = 100;
+  public int height = 200;
   public float worldScale = 10;
 
   public string optionalName = "Terrain";
