@@ -47,7 +47,7 @@ public class CreateTerrain : ScriptableWizard
     }
     plane.transform.position = Vector3.zero;
     MeshFilter meshFilter = plane.AddComponent<MeshFilter>();
-    MeshRenderer meshRenderer = plane.AddComponent<MeshRenderer>();
+    plane.AddComponent<MeshRenderer>();
     TerrainMeshGenerator generator = new TerrainMeshGenerator();
     generator.height = height;
     generator.width = width;

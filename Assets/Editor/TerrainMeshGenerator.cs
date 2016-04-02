@@ -9,13 +9,8 @@ using MIConvexHull;
 
 public class TerrainMeshGenerator
 {
-  private List<GridCell> gridCells;
   private IEnumerable<Triangle<Vertex>> tetrahedronCells;
   private List<Vertex> vertices;
-  private List<int> triangles;
-  private List<Vector4> tangents;
-  private List<Vector2> uvs;
-  private List<Color> colors;
 
   public int widthSegments;
   public int heightSegments;
@@ -40,11 +35,6 @@ public class TerrainMeshGenerator
   public TerrainMeshGenerator()
   {
     vertices = new List<Vertex>();
-    tangents = new List<Vector4>();
-    uvs = new List<Vector2>();
-    colors = new List<Color>();
-    triangles = new List<int>();
-    gridCells = new List<GridCell>();
   }
 
   public Mesh Createmesh()
@@ -54,6 +44,7 @@ public class TerrainMeshGenerator
     Mesh mesh = new Mesh();
     Vertex[] verticesOrdered = vertices.OrderBy(v => v.Id).ToArray();
     mesh.vertices = verticesOrdered.Select(v => v.Coords).ToArray();
+    List<int> triangles = new List<int>();
     foreach (var triangle in tetrahedronCells)
     {
       triangles.Add(triangle.Vertices[0].Id);
