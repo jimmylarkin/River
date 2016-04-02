@@ -28,13 +28,14 @@ public class RiverGenerator
   private Perlin perlinRight;
   private Perlin perlinLeftWidth;
   private Perlin perlinRightWidth;
+  private int seed = 1000;
 
   public RiverGenerator()
   {
     perlinLeft = new Perlin();
     perlinLeft.Frequency = frequency;
     perlinLeft.NoiseQuality = NoiseQuality.Standard;
-    perlinLeft.Seed = DateTime.Now.Millisecond;
+    perlinLeft.Seed = seed;
     perlinLeft.OctaveCount = octaves;
     perlinLeft.Lacunarity = 1.3;
     perlinLeft.Persistence = persistence;
@@ -42,7 +43,7 @@ public class RiverGenerator
     perlinRight = new Perlin();
     perlinRight.Frequency = frequency;
     perlinRight.NoiseQuality = NoiseQuality.Standard;
-    perlinRight.Seed = DateTime.Now.Millisecond * 2;
+    perlinRight.Seed = seed * 2;
     perlinRight.OctaveCount = octaves;
     perlinRight.Lacunarity = 1.4;
     perlinRight.Persistence = persistence;
@@ -50,7 +51,7 @@ public class RiverGenerator
     perlinLeftWidth = new Perlin();
     perlinLeftWidth.Frequency = frequency;
     perlinLeftWidth.NoiseQuality = NoiseQuality.Standard;
-    perlinLeftWidth.Seed = DateTime.Now.Millisecond / 5;
+    perlinLeftWidth.Seed = seed / 5;
     perlinLeftWidth.OctaveCount = octaves;
     perlinLeftWidth.Lacunarity = 1.2;
     perlinLeftWidth.Persistence = persistence;
@@ -58,7 +59,7 @@ public class RiverGenerator
     perlinRightWidth = new Perlin();
     perlinRightWidth.Frequency = frequency;
     perlinRightWidth.NoiseQuality = NoiseQuality.Standard;
-    perlinRightWidth.Seed = DateTime.Now.Millisecond * 3;
+    perlinRightWidth.Seed = seed * 3;
     perlinRightWidth.OctaveCount = octaves;
     perlinRightWidth.Lacunarity = 1.2;
     perlinRightWidth.Persistence = persistence;

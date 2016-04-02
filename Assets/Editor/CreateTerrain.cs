@@ -10,10 +10,11 @@ public class CreateTerrain : ScriptableWizard
   private static Camera cam;
   private static Camera lastUsedCam;
 
-  public int widthSegments = 50;
+  public int widthSegments = 100;
   public int heightSegments = 100;
-  public int width = 500;
-  public int height = 1000;
+  public int width = 100;
+  public int height = 100;
+  public float worldScale = 10;
 
   public string optionalName = "Terrain";
 
@@ -52,6 +53,7 @@ public class CreateTerrain : ScriptableWizard
     generator.width = width;
     generator.heightSegments = heightSegments + 1;
     generator.widthSegments = widthSegments + 1;
+    generator.worldScale = worldScale;
     Mesh mesh = generator.Createmesh();
     meshFilter.sharedMesh = mesh;
     Selection.activeObject = plane;
