@@ -24,7 +24,7 @@ public class TerrainMeshGenerator
   private float persistence = 0.35f;
   private float frequency = 0.008f;
   private int vertexIndex;
-  private float waterLevel = -25.0f;
+  private float bottomLevel = 25.0f;
 
   private Color water = new Color(37f / 256f, 66f / 256f, 71f / 256f);
   private Color shallowWater = new Color(78f / 256f, 144f / 256f, 135f / 256f);
@@ -73,6 +73,40 @@ public class TerrainMeshGenerator
     return mesh;
   }
 
+  private void CarveChannel(float scaleX, float waterLevel, float worldZ, float leftChannelLeftShore, float rightChannelRightShore, float midJointChannel, IModule unscalledTerrainModule, float dropDistanceFactor)
+  {
+    //vertices.Add(new Vertex { Position3D = new Vector3(leftChannelLeftShore, waterLevel, worldZ), Id = vertexIndex++, Color = water });
+    int stepsInChannel = Mathf.FloorToInt((rightChannelRightShore - leftChannelLeftShore) / scaleX);
+    float localScaleX = (rightChannelRightShore - leftChannelLeftShore) / (float)stepsInChannel;
+    float worldX = leftChannelLeftShore;
+    float dropDistance = (midJointChannel - worldX) / dropDistanceFactor;
+    for (int i = 0; i <= stepsInChannel; i++)
+    {
+      float worldY = waterLevel - bottomLevel;
+      //left decline
+      if (worldX < leftChannelLeftShore + dropDistance)
+      {
+        float x = (worldX - leftChannelLeftShore) / dropDistance * 3.141592654f;
+        worldY = waterLevel - bottomLevel * ((Mathf.Cos(x) * -1f) / 2f + 0.5f);
+      }
+      if (worldX > rightChannelRightShore - dropDistance)
+      {
+        float x = (rightChannelRightShore - worldX) / dropDistance * -3.141592654f;
+        worldY = waterLevel - bottomLevel * ((Mathf.Cos(x) * -1f) / 2f + 0.5f);
+      }
+      float yDeviation = (float)unscalledTerrainModule.GetValue(worldX * worldScale, 0, worldZ * worldScale);
+      worldY = worldY + yDeviation;
+      if (worldY > waterLevel)
+      {
+        worldY = waterLevel;
+      }
+      Vector3 vertex = new Vector3(worldX, worldY, worldZ);
+      vertices.Add(new Vertex { Position3D = vertex, Id = vertexIndex++, Color = water });
+      worldX = worldX + localScaleX;
+    }
+    //vertices.Add(new Vertex { Position3D = new Vector3(rightChannelRightShore, waterLevel, worldZ), Id = vertexIndex++, Color = water });
+  }
+
   public void GenerateMeshData()
   {
     //prepare noise generators
@@ -92,122 +126,157 @@ public class TerrainMeshGenerator
     float scaleX = (float)width / ((float)widthSegments - 1);
     float scaleZ = (float)height / ((float)heightSegments - 1);
     riverScale = riverScale / worldScale;
-    waterLevel = waterLevel / worldScale;
-    float realWaterLevel = 0f;
+    bottomLevel = bottomLevel / worldScale;
+    float waterLevel = 0f;
+    float leftBoundary = (widthSegments / 2) * scaleX * -1f;
+    float rightBoundary = (widthSegments / 2) * scaleX;
 
     for (int z = 0; z < heightSegments; z++)
     {
       float worldZ = z * scaleZ;
       //generate river channels for Z
-      float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 1.2f;
-      float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 1.2f;
-      float leftShore = (float)perlinLeft.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f - riverScale;
-      float rightShore = (float)perlinRight.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f + riverScale;
-      Vector3 leftChannelLeftShore = new Vector3(leftShore, 0f, worldZ);
-      Vector3 leftChannelRightShore = new Vector3(leftShore + leftWidth, 0f, worldZ);
-      Vector3 leftChannelMiddle = new Vector3(leftShore + leftWidth / 2f, waterLevel, worldZ);
-      Vector3 rightChannelLeftShore = new Vector3(rightShore, 0f, worldZ);
-      Vector3 rightChannelRightShore = new Vector3(rightShore + rightWidth, 0f, worldZ);
-      Vector3 rightChannelMiddle = new Vector3(rightShore + rightWidth / 2f, waterLevel, worldZ);
-      Vector3 midChannel = new Vector3(leftChannelLeftShore.x * 0.5f + rightChannelRightShore.x * 0.5f, waterLevel, worldZ);
+      float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 1.5f;
+      float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 1.5f;
+
+      float leftChannelLeftShore = (float)perlinLeft.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f - riverScale;
+      float leftChannelMiddle = leftChannelLeftShore + leftWidth / 2f;
+      float leftChannelRightShore = leftChannelLeftShore + leftWidth;
+
+      float rightChannelLeftShore = (float)perlinRight.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f + riverScale;
+      float rightChannelMiddle = rightChannelLeftShore + rightWidth / 2f;
+      float rightChannelRightShore = rightChannelLeftShore + rightWidth;
+
+      float midJointChannel = leftChannelLeftShore * 0.5f + rightChannelRightShore * 0.5f;
+
+      if (rightChannelLeftShore < leftChannelRightShore)
+      {
+        //joint channel
+        CarveChannel(scaleX, waterLevel, worldZ, leftChannelLeftShore, rightChannelRightShore, midJointChannel, terrainAdd, 2f);
+      }
+      else {
+        CarveChannel(scaleX, waterLevel, worldZ, leftChannelLeftShore, leftChannelRightShore, leftChannelMiddle, terrainAdd, 1f);
+        CarveChannel(scaleX, waterLevel, worldZ, rightChannelLeftShore, rightChannelRightShore, rightChannelMiddle, terrainAdd, 1f);
+      }
+      //fill terrain left from the river and add boundary vertex
+      float worldY = 0f;
+      for (float worldX = leftChannelLeftShore; worldX > leftBoundary; worldX = worldX - scaleX)
+      {
+        worldY = (float)terrainScaledModule.GetValue(worldX * worldScale, 0, worldZ * worldScale) / worldScale + 1.1f;
+        float factor = Decline(leftChannelLeftShore - worldX, 10f);
+        float delta = (worldY - waterLevel) * factor;
+        worldY = worldY - delta;
+        Vector3 vertex = new Vector3(worldX, worldY, worldZ);
+        vertices.Add(new Vertex { Position3D = vertex, Id = vertexIndex++, Color = grass });
+      }
+      Vector3 leftEdgeVertex = new Vector3(leftBoundary, worldY, worldZ);
+      vertices.Add(new Vertex { Position3D = leftEdgeVertex, Id = vertexIndex++, Color = grass });
+
+
+      //vertices.Add(new Vertex { Position3D = new Vector3(widthSegments / 2 * scaleX * -1, realWaterLevel, worldZ), Id = vertexIndex++, Color = sand });
+      //vertices.Add(new Vertex { Position3D = leftChannelLeftShore, Id = vertexIndex++, Color = water });
+      //vertices.Add(new Vertex { Position3D = leftChannelRightShore, Id = vertexIndex++, Color = water });
+      //vertices.Add(new Vertex { Position3D = rightChannelLeftShore, Id = vertexIndex++, Color = water });
+      //vertices.Add(new Vertex { Position3D = rightChannelRightShore, Id = vertexIndex++, Color = water });
+      //vertices.Add(new Vertex { Position3D = new Vector3(widthSegments / 2 * scaleX, realWaterLevel, worldZ), Id = vertexIndex++, Color = sand });
 
       for (int x = 0; x < widthSegments; x++)
       {
-        float worldX = (x - widthSegments / 2) * scaleX;
-        float worldY = (float)terrainScaledModule.GetValue(worldX * worldScale, 0, worldZ * worldScale) / worldScale + 1.1f;
-        Vector3 vertex = new Vector3(worldX, worldY, worldZ);
-        float factor = 0f;
-        float delta = 0f;
-        Color color = grass;
-        //river shape calculations
-        //A land shaping
-        //1. points left of the left channel
-        if (worldX <= leftChannelLeftShore.x)
-        {
-          factor = Decline(leftChannelLeftShore, vertex);
-          delta = (worldY - waterLevel) * factor;
-        }
-        //2. points between channels
-        if (worldX >= leftChannelRightShore.x && worldX <= rightChannelLeftShore.x)
-        {
-          factor = Decline(leftChannelRightShore, vertex) * 0.5f + Decline(rightChannelLeftShore, vertex) * 0.5f;
-          delta = (worldY - waterLevel) * factor;
-        }
-        //3. points right of the right channel
-        if (worldX >= rightChannelRightShore.x)
-        {
-          factor = Decline(rightChannelRightShore, vertex);
-          delta = (worldY - waterLevel) * factor;
-        }
-        //B bottom shapping
-        //1. separated channels
-        if (leftChannelRightShore.x < rightChannelLeftShore.x)
-        {
-          //left channel
-          if (worldX > leftChannelLeftShore.x && worldX <= leftChannelRightShore.x)
-          {
-            factor = 1f;
-            float factorBetween = Decline(leftChannelMiddle, vertex);
-            delta = (worldY - waterLevel) * (factor + factorBetween);
-            color = water;
-          }
-          //right channel
-          if (worldX > rightChannelLeftShore.x && worldX <= rightChannelRightShore.x)
-          {
-            factor = 1f;
-            float factorBetween = Decline(rightChannelMiddle, vertex);
-            delta = (worldY - waterLevel) * (factor + factorBetween);
-            color = water;
-          }
-        }
-        float lastFactorBetween = 0f;
-        //2. overlapping channels
-        if (leftChannelRightShore.x >= rightChannelLeftShore.x)
-        {
-          //left channel part
-          if (worldX > leftChannelLeftShore.x && worldX <= leftChannelMiddle.x)
-          {
-            factor = 1f;
-            float factorBetween = Decline(leftChannelMiddle, vertex);
-            lastFactorBetween = factorBetween;
-            delta = (worldY - waterLevel) * (factor + factorBetween);
-            color = water;
-          }
-          //right channel part
-          if (worldX > rightChannelMiddle.x && worldX <= rightChannelRightShore.x)
-          {
-            factor = 1f;
-            float factorBetween = Decline(rightChannelMiddle, vertex);
-            delta = (worldY - waterLevel) * (factor + factorBetween);
-            color = water;
-          }
-          //part in the middle
-          if (worldX >= leftChannelMiddle.x && worldX <= rightChannelMiddle.x)
-          {
-            factor = 1f;
-            float factorBetween = Decline(midChannel, vertex);
-            delta = (worldY - waterLevel) * (factor + factorBetween + lastFactorBetween);
-            color = water;
-          }
-        }
-        worldY = worldY - delta;
 
-        color = grass;
-        //biomes
-        if (worldY <= realWaterLevel - 1f)
-        {
-          color = water;
-        }
-        else if (worldY > realWaterLevel - 1f && worldY < realWaterLevel - 0.3f)
-        {
-          color = shallowWater;
-        }
-        else if (worldY > realWaterLevel - 0.3f && worldY < realWaterLevel + 0.2f)
-        {
-          color = sand;
-        }
-        vertex = new Vector3(worldX, worldY, worldZ);
-        vertices.Add(new Vertex { Position3D = vertex, Id = vertexIndex++, Color = color });
+        //float worldX = (x - widthSegments / 2) * scaleX;
+        //float worldY = (float)terrainScaledModule.GetValue(worldX * worldScale, 0, worldZ * worldScale) / worldScale + 1.1f;
+        //Vector3 vertex = new Vector3(worldX, worldY, worldZ);
+        //float factor = 0f;
+        //float delta = 0f;
+        //Color color = grass;
+        ////river shape calculations
+        ////A land shaping
+        ////1. points left of the left channel
+        //if (worldX <= leftChannelLeftShore.x)
+        //{
+        //  factor = Decline(leftChannelLeftShore, vertex);
+        //  delta = (worldY - waterLevel) * factor;
+        //}
+        ////2. points between channels
+        //if (worldX >= leftChannelRightShore.x && worldX <= rightChannelLeftShore.x)
+        //{
+        //  factor = Decline(leftChannelRightShore, vertex) * 0.5f + Decline(rightChannelLeftShore, vertex) * 0.5f;
+        //  delta = (worldY - waterLevel) * factor;
+        //}
+        ////3. points right of the right channel
+        //if (worldX >= rightChannelRightShore.x)
+        //{
+        //  factor = Decline(rightChannelRightShore, vertex);
+        //  delta = (worldY - waterLevel) * factor;
+        //}
+        ////B bottom shapping
+        ////1. separated channels
+        //if (leftChannelRightShore.x < rightChannelLeftShore.x)
+        //{
+        //  //left channel
+        //  if (worldX > leftChannelLeftShore.x && worldX <= leftChannelRightShore.x)
+        //  {
+        //    factor = 1f;
+        //    float factorBetween = Decline(leftChannelMiddle, vertex);
+        //    delta = (worldY - waterLevel) * (factor + factorBetween);
+        //    color = water;
+        //  }
+        //  //right channel
+        //  if (worldX > rightChannelLeftShore.x && worldX <= rightChannelRightShore.x)
+        //  {
+        //    factor = 1f;
+        //    float factorBetween = Decline(rightChannelMiddle, vertex);
+        //    delta = (worldY - waterLevel) * (factor + factorBetween);
+        //    color = water;
+        //  }
+        //}
+        //float lastFactorBetween = 0f;
+        ////2. overlapping channels
+        //if (leftChannelRightShore.x >= rightChannelLeftShore.x)
+        //{
+        //  //left channel part
+        //  if (worldX > leftChannelLeftShore.x && worldX <= leftChannelMiddle.x)
+        //  {
+        //    factor = 1f;
+        //    float factorBetween = Decline(leftChannelMiddle, vertex);
+        //    lastFactorBetween = factorBetween;
+        //    delta = (worldY - waterLevel) * (factor + factorBetween);
+        //    color = water;
+        //  }
+        //  //right channel part
+        //  if (worldX > rightChannelMiddle.x && worldX <= rightChannelRightShore.x)
+        //  {
+        //    factor = 1f;
+        //    float factorBetween = Decline(rightChannelMiddle, vertex);
+        //    delta = (worldY - waterLevel) * (factor + factorBetween);
+        //    color = water;
+        //  }
+        //  //part in the middle
+        //  if (worldX >= leftChannelMiddle.x && worldX <= rightChannelMiddle.x)
+        //  {
+        //    factor = 1f;
+        //    float factorBetween = Decline(midChannel, vertex);
+        //    delta = (worldY - waterLevel) * (factor + factorBetween + lastFactorBetween);
+        //    color = water;
+        //  }
+        //}
+        //worldY = worldY - delta;
+
+        //color = grass;
+        ////biomes
+        //if (worldY <= realWaterLevel - 1f)
+        //{
+        //  color = water;
+        //}
+        //else if (worldY > realWaterLevel - 1f && worldY < realWaterLevel - 0.3f)
+        //{
+        //  color = shallowWater;
+        //}
+        //else if (worldY > realWaterLevel - 0.3f && worldY < realWaterLevel + 0.2f)
+        //{
+        //  color = sand;
+        //}
+        //vertex = new Vector3(worldX, worldY, worldZ);
+        //vertices.Add(new Vertex { Position3D = vertex, Id = vertexIndex++, Color = color });
 
         //Vector4 tangent = new Vector4(worldX, 0f, 0f, -1f);
         //tangent.Normalize();
@@ -225,11 +294,10 @@ public class TerrainMeshGenerator
     }
   }
 
-  private float Decline(Vector3 mid, Vector3 point)
+  private float Decline(float distance, float zeroPointDistance)
   {
-    float distance = Mathf.Abs((point - mid).magnitude) * worldScale;
     //don't calculate for some distance - check what distance
-    float factor = Mathf.Exp(distance * distance / 250f * -1f);
+    float factor = Mathf.Exp(distance * distance / (zeroPointDistance / 2 * 10) * -1f);
     return factor;
   }
 }
