@@ -1,6 +1,7 @@
 ﻿Shader "Custom/FlatTexturedShader" {
 	Properties{
 		_MainTex("Base texture", 2D) = "white" {}
+		_Color ("Color", Color) = (0.6, 0.6, 0.6, 1.0)
 	}
 	SubShader{
 		Pass {
@@ -23,17 +24,14 @@
 
 			//user defined variables
 			uniform float4 _Color;
-			// textures from shader properties
         	sampler2D _MainTex;
         	uniform float4 _MainTex_ST;
 
 			struct v2f 
 			{
 				float4 pos: SV_POSITION;
-				fixed3 color : COLOR0;  //vertex color
 				float4 posWorld : TEXCOORD0;
 				float2 uv : TEXCOORD3;
-				float2 offset : TEXCOORD4;
 				SHADOW_COORDS(1) // put shadows data into TEXCOORD1
 			};
 
@@ -42,9 +40,7 @@
 				v2f o;
 				o.posWorld = mul(_Object2World, v.vertex);
 				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-				o.uv = v.texcoord * _MainTex_ST.xy + _MainTex_ST.zw + v.texcoord1;
-				o.color =  v.color;
-				o.offset = v.texcoord1;
+				o.uv = v.texcoord * _MainTex_ST.xy + _MainTex_ST.zw;
 				// compute shadows data
                 TRANSFER_SHADOW(o);
 				return o;
@@ -56,12 +52,12 @@
                 float3 posddy = ddy(i.posWorld.xyz);
                 float3 derivedNormal = cross(normalize(posddy), normalize(posddx));
 				half3 worldNormal = UnityObjectToWorldNormal(derivedNormal);
-				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+				half nl = max(0, dot(derivedNormal, _WorldSpaceLightPos0.xyz));
                 fixed3 difussedReflection = nl * _LightColor0.rgb;
                 fixed shadow = SHADOW_ATTENUATION(i);
-                fixed3 finalColor = difussedReflection  * shadow + ShadeSH9(half4(worldNormal, 1));
+                fixed3 finalColor = difussedReflection  * shadow + ShadeSH9(half4(derivedNormal, 1));
 				fixed3 baseTextelColor = tex2D(_MainTex, i.uv).rgb;
-				fixed3 finalTextelColor = baseTextelColor* finalColor;	
+				fixed3 finalTextelColor = baseTextelColor * finalColor * _Color;	
 				//return fixed4(derivedNormal, 1.0);			
                 return fixed4(finalTextelColor, 1.0);
             }

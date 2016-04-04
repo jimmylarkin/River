@@ -15,6 +15,7 @@ public class CreateTerrain : ScriptableWizard
   public int width = 100;
   public int height = 200;
   public float worldScale = 10;
+  public float angle;
 
   public string optionalName = "Terrain";
 
@@ -47,13 +48,15 @@ public class CreateTerrain : ScriptableWizard
     }
     plane.transform.position = Vector3.zero;
     MeshFilter meshFilter = plane.AddComponent<MeshFilter>();
-    plane.AddComponent<MeshRenderer>();
+    MeshRenderer renderer = plane.AddComponent<MeshRenderer>();
+    renderer.materials = new Material[8];
     TerrainMeshGenerator generator = new TerrainMeshGenerator();
     generator.height = height;
     generator.width = width;
     generator.heightSegments = heightSegments + 1;
     generator.widthSegments = widthSegments + 1;
     generator.worldScale = worldScale;
+    generator.angle = angle;
     Mesh mesh = generator.Createmesh();
     meshFilter.sharedMesh = mesh;
     Selection.activeObject = plane;

@@ -8,6 +8,7 @@ public class Triangle<TVertex> : TriangulationCell<TVertex, Triangle<TVertex>>
       where TVertex : Vertex
 {
   public Vector3 Normal { get; set; }
+  public Biomes Biome { get; set; }
 
   public void ComputeNormal()
   {
@@ -31,4 +32,82 @@ public class Triangle<TVertex> : TriangulationCell<TVertex, Triangle<TVertex>>
     }
     return "Triangle, no vertices set";
   }
+
+  public float MinY()
+  {
+    if (Vertices[1].Position3D.y < Vertices[0].Position3D.y)
+    {
+      if (Vertices[2].Position3D.y < Vertices[1].Position3D.y)
+      {
+        return Vertices[2].Position3D.y;
+      }
+      else {
+        return Vertices[1].Position3D.y;
+      }
+    }
+    else {
+      if (Vertices[2].Position3D.y < Vertices[0].Position3D.y)
+      {
+        return Vertices[2].Position3D.y;
+      }
+      else {
+        return Vertices[0].Position3D.y;
+      }
+    }
+  }
+
+  public float MaxY()
+  {
+    if (Vertices[1].Position3D.y > Vertices[0].Position3D.y)
+    {
+      if (Vertices[2].Position3D.y > Vertices[1].Position3D.y)
+      {
+        return Vertices[2].Position3D.y;
+      }
+      else {
+        return Vertices[1].Position3D.y;
+      }
+    }
+    else {
+      if (Vertices[2].Position3D.y > Vertices[0].Position3D.y)
+      {
+        return Vertices[2].Position3D.y;
+      }
+      else {
+        return Vertices[0].Position3D.y;
+      }
+    }
+  }
+
+  public int VertexIndex(Vertex vertex)
+  {
+    if (Vertices.Length == 3)
+    {
+      if (Vertices[0].Id == vertex.Id)
+      {
+        return 0;
+      }
+      if (Vertices[1].Id == vertex.Id)
+      {
+        return 1;
+      }
+      if (Vertices[2].Id == vertex.Id)
+      {
+        return 2;
+      }
+    }
+    return -1;
+  }
+}
+
+public enum Biomes
+{
+  Grass,
+  DeadGrass,
+  Dirt,
+  Cliff,
+  Sand,
+  ShallowWater,
+  Water,
+  DeepWater
 }
