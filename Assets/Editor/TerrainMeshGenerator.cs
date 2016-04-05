@@ -46,7 +46,7 @@ public class TerrainMeshGenerator
 
     Perlin terrainPerlin = new Perlin() { Frequency = 0.008f, NoiseQuality = NoiseQuality.Standard, Seed = 0, OctaveCount = 6, Lacunarity = 2.5, Persistence = 0.35f };
     RidgedMultifractal terrainRMF = new RidgedMultifractal() { Frequency = 0.002f, NoiseQuality = NoiseQuality.High, Seed = 2, OctaveCount = 6, Lacunarity = 5 };
-    ScaleOutput scaledRMF = new ScaleOutput(terrainRMF, 1.2);
+    ScaleOutput scaledRMF = new ScaleOutput(terrainRMF, 1.4);
     Add terrainAdd = new Add(terrainPerlin, new BiasOutput(scaledRMF, 0.6));
     terrainScaledModule = new ScaleOutput(terrainAdd, scale);
 
@@ -179,37 +179,44 @@ public class TerrainMeshGenerator
     float midJointChannel = leftChannelLeftShore * 0.5f + rightChannelRightShore * 0.5f;
 
     //approximate channel values to nearest segment
-    int leftChannelLeftShoreSegment = Mathf.FloorToInt(leftChannelLeftShore / scaleX) + widthSegments / 2;
+    int leftChannelLeftShoreSegment = Mathf.RoundToInt(leftChannelLeftShore / scaleX) + widthSegments / 2;
     int leftChannelMiddleSegment = Mathf.RoundToInt(leftChannelMiddle / scaleX) + widthSegments / 2;
-    int leftChannelRightShoreSegment = Mathf.CeilToInt(leftChannelRightShore / scaleX) + widthSegments / 2;
-    int rightChannelLeftShoreSegment = Mathf.FloorToInt(rightChannelLeftShore / scaleX) + widthSegments / 2;
+    int leftChannelRightShoreSegment = Mathf.RoundToInt(leftChannelRightShore / scaleX) + widthSegments / 2;
+    int rightChannelLeftShoreSegment = Mathf.RoundToInt(rightChannelLeftShore / scaleX) + widthSegments / 2;
     int rightChannelMiddleSegment = Mathf.RoundToInt(rightChannelMiddle / scaleX) + widthSegments / 2;
-    int rightChannelRightShoreSegment = Mathf.CeilToInt(rightChannelRightShore / scaleX) + widthSegments / 2;
+    int rightChannelRightShoreSegment = Mathf.RoundToInt(rightChannelRightShore / scaleX) + widthSegments / 2;
     int midJointChannelSegment = Mathf.RoundToInt(midJointChannel / scaleX) + widthSegments / 2;
 
     if (rightChannelLeftShore < leftChannelRightShore)
     {
-      dataRow[leftChannelLeftShoreSegment] = new Vector3(dataRow[leftChannelLeftShoreSegment].x, waterLevel, dataRow[leftChannelLeftShoreSegment].z);
       for (int i = leftChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
       {
         dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
       }
-      dataRow[rightChannelRightShoreSegment] = new Vector3(dataRow[rightChannelRightShoreSegment].x, waterLevel, dataRow[rightChannelRightShoreSegment].z);
     }
     else {
-      dataRow[leftChannelLeftShoreSegment] = new Vector3(dataRow[leftChannelLeftShoreSegment].x, waterLevel, dataRow[leftChannelLeftShoreSegment].z);
       for (int i = leftChannelLeftShoreSegment + 1; i < leftChannelRightShoreSegment; i++)
       {
         dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
       }
-      dataRow[leftChannelRightShoreSegment] = new Vector3(dataRow[leftChannelRightShoreSegment].x, waterLevel, dataRow[leftChannelRightShoreSegment].z);
-
-      dataRow[rightChannelLeftShoreSegment] = new Vector3(dataRow[rightChannelLeftShoreSegment].x, waterLevel, dataRow[rightChannelLeftShoreSegment].z);
       for (int i = rightChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
       {
         dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
       }
-      dataRow[rightChannelRightShoreSegment] = new Vector3(dataRow[rightChannelRightShoreSegment].x, waterLevel, dataRow[rightChannelRightShoreSegment].z);
+    }
+    bool inWater = dataRow[0].y < waterLevel;
+    for (int i = 1; i < widthSegments; i++)
+    {
+      if (inWater && dataRow[i].y >= waterLevel)
+      {
+        inWater = false;
+        dataRow[i] = new Vector3(dataRow[i].x, waterLevel, dataRow[i].z);
+      }
+      else if (!inWater && dataRow[i].y < waterLevel)
+      {
+        inWater = true;
+        dataRow[i] = new Vector3(dataRow[i].x, waterLevel, dataRow[i].z);
+      }
     }
   }
 
