@@ -9,6 +9,12 @@ using System;
 
 public class TerrainMeshGenerator
 {
+  private Perlin biomesPerlin;
+  private Perlin perlinLeft;
+  private Perlin perlinLeftWidth;
+  private Perlin perlinRight;
+  private Perlin perlinRightWidth;
+  private ScaleOutput terrainScaledModule;
   private List<Triangle<Vertex>> Triangles;
   private List<Vertex> vertices;
 
@@ -23,10 +29,28 @@ public class TerrainMeshGenerator
   private float scale = 15.0f;
   private int vertexIndex;
   private float bottomLevel = -25.0f;
+  private int seed = DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute;
 
   public TerrainMeshGenerator()
   {
     vertices = new List<Vertex>();
+  }
+
+  private void InitGenerators()
+  {
+    //prepare noise generators
+    perlinLeft = new Perlin() { Frequency = 0.004f, NoiseQuality = NoiseQuality.Standard, Seed = seed, OctaveCount = 6, Lacunarity = 1.2, Persistence = 0.45f };
+    perlinRight = new Perlin() { Frequency = 0.004f, NoiseQuality = NoiseQuality.Standard, Seed = seed * 2, OctaveCount = 6, Lacunarity = 1.2, Persistence = 0.45f };
+    perlinLeftWidth = new Perlin() { Frequency = 0.005f, NoiseQuality = NoiseQuality.Standard, Seed = seed / 5, OctaveCount = 6, Lacunarity = 1.4, Persistence = 0.3f };
+    perlinRightWidth = new Perlin() { Frequency = 0.005f, NoiseQuality = NoiseQuality.Standard, Seed = seed * 3, OctaveCount = 6, Lacunarity = 1.4, Persistence = 0.3f };
+
+    Perlin terrainPerlin = new Perlin() { Frequency = 0.008f, NoiseQuality = NoiseQuality.Standard, Seed = 0, OctaveCount = 6, Lacunarity = 2.5, Persistence = 0.35f };
+    RidgedMultifractal terrainRMF = new RidgedMultifractal() { Frequency = 0.002f, NoiseQuality = NoiseQuality.High, Seed = 2, OctaveCount = 6, Lacunarity = 5 };
+    ScaleOutput scaledRMF = new ScaleOutput(terrainRMF, 1.2);
+    Add terrainAdd = new Add(terrainPerlin, new BiasOutput(scaledRMF, 0.6));
+    terrainScaledModule = new ScaleOutput(terrainAdd, scale);
+
+    biomesPerlin = new Perlin() { Frequency = 0.15f, NoiseQuality = NoiseQuality.Low, Seed = 0, OctaveCount = 6, Lacunarity = 2.5, Persistence = 0.35f };
   }
 
   public Mesh Createmesh()
@@ -42,31 +66,31 @@ public class TerrainMeshGenerator
     }
     mesh.vertices = verticesOrdered.Select(v => v.Position3D).ToArray();
     List<int> triangleIndexes = new List<int>(Triangles.Count * 3);
-    //foreach (var triangle in Triangles)
-    //{
-    //  triangleIndexes.Add(triangle.Vertices[0].Id);
-    //  triangleIndexes.Add(triangle.Vertices[1].Id);
-    //  triangleIndexes.Add(triangle.Vertices[2].Id);
-    //}
-    //mesh.triangles = triangleIndexes.ToArray();
-    mesh.subMeshCount = 8;
-    GetTrianglesByBiome(triangleIndexes, Biomes.Grass);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 0);
-    GetTrianglesByBiome(triangleIndexes, Biomes.Dirt);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 1);
-    GetTrianglesByBiome(triangleIndexes, Biomes.DeadGrass);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 2);
-    GetTrianglesByBiome(triangleIndexes, Biomes.Cliff);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 3);
-    GetTrianglesByBiome(triangleIndexes, Biomes.Sand);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 4);
-    GetTrianglesByBiome(triangleIndexes, Biomes.Water);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 5);
-    GetTrianglesByBiome(triangleIndexes, Biomes.ShallowWater);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 6);
-    GetTrianglesByBiome(triangleIndexes, Biomes.DeepWater);
-    mesh.SetTriangles(triangleIndexes.ToArray(), 7);
+    foreach (var triangle in Triangles)
+    {
+      triangleIndexes.Add(triangle.Vertices[0].Id);
+      triangleIndexes.Add(triangle.Vertices[1].Id);
+      triangleIndexes.Add(triangle.Vertices[2].Id);
+    }
     mesh.triangles = triangleIndexes.ToArray();
+    //mesh.subMeshCount = 8;
+    //GetTrianglesByBiome(triangleIndexes, Biomes.Grass);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 0);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.Dirt);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 1);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.DeadGrass);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 2);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.Cliff);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 3);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.Sand);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 4);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.Water);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 5);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.ShallowWater);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 6);
+    //GetTrianglesByBiome(triangleIndexes, Biomes.DeepWater);
+    //mesh.SetTriangles(triangleIndexes.ToArray(), 7);
+    //mesh.triangles = triangleIndexes.ToArray();
     mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
     //mesh.normals = verticesOrdered.Select(v => v.Normal).ToArray();
     //mesh.uv = uvs.ToArray();
@@ -86,54 +110,42 @@ public class TerrainMeshGenerator
       triangleIndexes.Add(triangle.Vertices[2].Id);
     }
   }
+
   public void GenerateMeshData()
   {
-    //prepare noise generators
-    int seed = 1000;
-    Perlin perlinLeft = new Perlin() { Frequency = 0.007f, NoiseQuality = NoiseQuality.Standard, Seed = seed, OctaveCount = 6, Lacunarity = 1.3, Persistence = 0.45f };
-    Perlin perlinRight = new Perlin() { Frequency = 0.008f, NoiseQuality = NoiseQuality.Standard, Seed = seed * 2, OctaveCount = 6, Lacunarity = 1.2, Persistence = 0.45f };
-    Perlin perlinLeftWidth = new Perlin() { Frequency = 0.007f, NoiseQuality = NoiseQuality.Standard, Seed = seed / 5, OctaveCount = 6, Lacunarity = 1.4, Persistence = 0.6f };
-    Perlin perlinRightWidth = new Perlin() { Frequency = 0.008f, NoiseQuality = NoiseQuality.Standard, Seed = seed * 3, OctaveCount = 6, Lacunarity = 1.4, Persistence = 0.6f };
-
-    Perlin biomesPerlin = new Perlin() { Frequency = 0.15f, NoiseQuality = NoiseQuality.Low, Seed = 0, OctaveCount = 6, Lacunarity = 2.5, Persistence = 0.35f };
-
-    Perlin terrainPerlin = new Perlin() { Frequency = 0.008f, NoiseQuality = NoiseQuality.Standard, Seed = 0, OctaveCount = 6, Lacunarity = 2.5, Persistence = 0.35f };
-    RidgedMultifractal terrainRMF = new RidgedMultifractal() { Frequency = 0.002f, NoiseQuality = NoiseQuality.High, Seed = 2, OctaveCount = 6, Lacunarity = 5 };
-    ScaleOutput scaledRMF = new ScaleOutput(terrainRMF, 1.2);
-    Add terrainAdd = new Add(terrainPerlin, new BiasOutput(scaledRMF, 0.6));
-    ScaleOutput terrainScaledModule = new ScaleOutput(terrainAdd, scale);
-
+    InitGenerators();
     //set scalling factors
     float scaleX = (float)width / ((float)widthSegments - 1);
     float scaleZ = (float)height / ((float)heightSegments - 1);
     riverScale = riverScale / worldScale;
     bottomLevel = bottomLevel / worldScale;
+    float waterLevel = 0f;
+    float leftBoundary = (widthSegments / 2) * scaleX * -1f;
+    float rightBoundary = (widthSegments / 2) * scaleX;
 
     for (int z = 0; z < heightSegments; z++)
     {
+      Vector3[] dataRow = new Vector3[widthSegments];
       float worldZ = z * scaleZ;
-      //generate river channels for Z
-      float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 2f;
-      float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale + riverScale * 2f;
-      float leftShore = (float)perlinLeft.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f - riverScale * 1.3f;
-      float rightShore = (float)perlinRight.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f + riverScale * 1.2f;
-      Vector3 leftChannelLeftShore = new Vector3(leftShore, 0f, worldZ);
-      Vector3 leftChannelRightShore = new Vector3(leftShore + leftWidth, 0f, worldZ);
-      Vector3 leftChannelMiddle = new Vector3(leftShore + leftWidth / 2f, bottomLevel, worldZ);
-      Vector3 rightChannelLeftShore = new Vector3(rightShore, 0f, worldZ);
-      Vector3 rightChannelRightShore = new Vector3(rightShore + rightWidth, 0f, worldZ);
-      Vector3 rightChannelMiddle = new Vector3(rightShore + rightWidth / 2f, bottomLevel, worldZ);
-      Vector3 midChannel = new Vector3(leftChannelLeftShore.x * 0.5f + rightChannelRightShore.x * 0.5f, bottomLevel, worldZ);
 
+      //fill terrain left from the river and add boundary vertex
       for (int x = 0; x < widthSegments; x++)
       {
         float worldX = (x - widthSegments / 2) * scaleX;
         float worldY = (float)terrainScaledModule.GetValue(worldX * worldScale, 0, worldZ * worldScale) / worldScale + 1.1f;
-
-        Vector3 vertex = CarveRiver(worldZ, leftChannelLeftShore, leftChannelRightShore, leftChannelMiddle, rightChannelLeftShore, rightChannelRightShore, rightChannelMiddle, midChannel, worldX, worldY);
-        vertices.Add(new Vertex { Position3D = vertex, Id = vertexIndex++ });
-        //uvs.Add(new Vector2(x * scaleX / (float)widthSegments, z * scaleZ / (float)heightSegments));
+        //ensure river is down at the bottom
+        Vector3 vertex = new Vector3(worldX, worldY, worldZ);
+        dataRow[x] = vertex;
       }
+      CarveRiverChannel(dataRow, scaleX, worldZ);
+      for (int x = 0; x < widthSegments; x++)
+      {
+        vertices.Add(new Vertex { Position3D = dataRow[x], Id = vertexIndex++ });
+      }
+      //for (int x = 0; x < widthSegments; x++)
+      //{
+      //  uvs.Add(new Vector2(x * scaleX / (float)widthSegments, z * scaleZ / (float)heightSegments));
+      //}
     }
 
     var config = new TriangulationComputationConfig();
@@ -149,13 +161,65 @@ public class TerrainMeshGenerator
     }
   }
 
+  private void CarveRiverChannel(Vector3[] dataRow, float scaleX, float worldZ)
+  {
+    float constantWidthPart = riverScale * 3.1f;
+    //generate river channels for Z
+    float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale * 3f + constantWidthPart;
+    float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, worldZ * worldScale)) * riverScale * 3f + constantWidthPart;
+
+    float leftChannelMiddle = (float)perlinLeft.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f - constantWidthPart * 0.7f;
+    float leftChannelLeftShore = leftChannelMiddle - leftWidth / 2f;
+    float leftChannelRightShore = leftChannelMiddle + leftWidth / 2f;
+
+    float rightChannelMiddle = (float)perlinRight.GetValue(0, 0, worldZ * worldScale) * riverScale * 1.5f + constantWidthPart * 0.7f;
+    float rightChannelLeftShore = rightChannelMiddle - rightWidth / 2f;
+    float rightChannelRightShore = rightChannelMiddle + rightWidth / 2f;
+
+    float midJointChannel = leftChannelLeftShore * 0.5f + rightChannelRightShore * 0.5f;
+
+    //approximate channel values to nearest segment
+    int leftChannelLeftShoreSegment = Mathf.FloorToInt(leftChannelLeftShore / scaleX) + widthSegments / 2;
+    int leftChannelMiddleSegment = Mathf.RoundToInt(leftChannelMiddle / scaleX) + widthSegments / 2;
+    int leftChannelRightShoreSegment = Mathf.CeilToInt(leftChannelRightShore / scaleX) + widthSegments / 2;
+    int rightChannelLeftShoreSegment = Mathf.FloorToInt(rightChannelLeftShore / scaleX) + widthSegments / 2;
+    int rightChannelMiddleSegment = Mathf.RoundToInt(rightChannelMiddle / scaleX) + widthSegments / 2;
+    int rightChannelRightShoreSegment = Mathf.CeilToInt(rightChannelRightShore / scaleX) + widthSegments / 2;
+    int midJointChannelSegment = Mathf.RoundToInt(midJointChannel / scaleX) + widthSegments / 2;
+
+    if (rightChannelLeftShore < leftChannelRightShore)
+    {
+      dataRow[leftChannelLeftShoreSegment] = new Vector3(dataRow[leftChannelLeftShoreSegment].x, waterLevel, dataRow[leftChannelLeftShoreSegment].z);
+      for (int i = leftChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
+      {
+        dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
+      }
+      dataRow[rightChannelRightShoreSegment] = new Vector3(dataRow[rightChannelRightShoreSegment].x, waterLevel, dataRow[rightChannelRightShoreSegment].z);
+    }
+    else {
+      dataRow[leftChannelLeftShoreSegment] = new Vector3(dataRow[leftChannelLeftShoreSegment].x, waterLevel, dataRow[leftChannelLeftShoreSegment].z);
+      for (int i = leftChannelLeftShoreSegment + 1; i < leftChannelRightShoreSegment; i++)
+      {
+        dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
+      }
+      dataRow[leftChannelRightShoreSegment] = new Vector3(dataRow[leftChannelRightShoreSegment].x, waterLevel, dataRow[leftChannelRightShoreSegment].z);
+
+      dataRow[rightChannelLeftShoreSegment] = new Vector3(dataRow[rightChannelLeftShoreSegment].x, waterLevel, dataRow[rightChannelLeftShoreSegment].z);
+      for (int i = rightChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
+      {
+        dataRow[i] = new Vector3(dataRow[i].x, bottomLevel, dataRow[i].z);
+      }
+      dataRow[rightChannelRightShoreSegment] = new Vector3(dataRow[rightChannelRightShoreSegment].x, waterLevel, dataRow[rightChannelRightShoreSegment].z);
+    }
+  }
+
+  float cliffAngle = 50;
+  float hillAngle = 20;
+  float waterLevel = 0f;
+  float shallowWaterLevel = -1f;
+
   private void SetBiome(Triangle<Vertex> triangle, IModule biomesNoise)
   {
-    float cliffAngle = 50;
-    float hillAngle = 20;
-    float waterLevel = 0f;
-    float shallowWaterLevel = waterLevel - 1f;
-
     Vector3 center = (triangle.Vertices[0].Position3D + triangle.Vertices[1].Position3D + triangle.Vertices[2].Position3D) / 3f;
     var noiseValue = biomesNoise.GetValue(center.x, center.y, center.z);
     float normalAngle = Mathf.Abs(Vector3.Angle(triangle.Normal, Vector3.up));
