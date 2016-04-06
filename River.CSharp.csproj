@@ -17,7 +17,7 @@
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.3.4f1</UnityVersion>
-    <RootNamespace>River</RootNamespace>
+    <RootNamespace>GrumpyDev.EndlessRiver</RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -62,22 +62,40 @@
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
     <Reference Include="LibNoise">
-      <HintPath>Assets\LibNoise.dll</HintPath>
+      <HintPath>Assets\Libraries\LibNoise.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Libraries\MIConvexHull\Configuration.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\Algorithm\Core.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\Algorithm\Data.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\Algorithm\Initialize.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\Algorithm\Result.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\Collections.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\ConvexFace.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\DataModel.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\MathHelper.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\ConvexHull\ObjectManager.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\IVertex.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation\DelaunayTrianglationInternal.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation\DelaunayTriangulation.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation\TriangulationCell.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation\VoronoiEdge.cs" />
+    <Compile Include="Assets\Libraries\MIConvexHull\Triangulation\VoronoiMesh.cs" />
+    <Compile Include="Assets\Scripts\Behaviours\MapController.cs" />
     <Compile Include="Assets\Scripts\Behaviours\PlayerController.cs" />
-    <Compile Include="Assets\Scripts\Behaviours\TerrainController.cs" />
     <Compile Include="Assets\Scripts\Behaviours\WorldController.cs" />
-    <Compile Include="Assets\Scripts\Models\Ground.cs" />
-    <Compile Include="Assets\Scripts\Models\GroundTile.cs" />
-    <Compile Include="Assets\Scripts\Perlin.cs" />
+    <Compile Include="Assets\Scripts\Models\Biomes.cs" />
+    <Compile Include="Assets\Scripts\Models\Map.cs" />
+    <Compile Include="Assets\Scripts\Models\Triangle.cs" />
+    <Compile Include="Assets\Scripts\Models\Vertex.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\FlatShader.shader" />
     <None Include="Assets\Shaders\FlatTexturedShader.shader" />
     <None Include="Assets\Shaders\FlatVertexColorShader.shader" />
-    <None Include="Assets\Shaders\Test.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

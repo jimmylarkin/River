@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace River
+namespace GrumpyDev.EndlessRiver
 {
   public class WorldController : MonoBehaviour
   {
