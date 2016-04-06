@@ -13,7 +13,8 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.3.4f1</UnityVersion>
@@ -89,6 +90,8 @@
     <Compile Include="Assets\Scripts\Behaviours\WorldController.cs" />
     <Compile Include="Assets\Scripts\Models\Biomes.cs" />
     <Compile Include="Assets\Scripts\Models\Map.cs" />
+    <Compile Include="Assets\Scripts\Models\RiverChannelData.cs" />
+    <Compile Include="Assets\Scripts\Models\RiverData.cs" />
     <Compile Include="Assets\Scripts\Models\Triangle.cs" />
     <Compile Include="Assets\Scripts\Models\Vertex.cs" />
   </ItemGroup>

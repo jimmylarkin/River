@@ -23,12 +23,7 @@ namespace GrumpyDev.EndlessRiver
       var distance = Time.deltaTime * speed;
       mainCamera.transform.Translate(0, 0, distance, Space.World);
       var newCameraOverTileIndex = Mathf.FloorToInt(mainCamera.transform.position.z / terrainTileSize);
-      TerrainController controller = terrainController.GetComponent<TerrainController>();
-      if (newCameraOverTileIndex > cameraOverTileIndex)
-      {
-        controller.AdvanceTile();
-        cameraOverTileIndex = newCameraOverTileIndex;
-      }
+      MapController controller = terrainController.GetComponent<MapController>();
     }
   }
 }

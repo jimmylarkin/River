@@ -26,6 +26,7 @@ namespace GrumpyDev.EndlessRiver
     public int Seed { get; set; }
     public List<Vertex> Vertices { get; set; }
     public List<Triangle<Vertex>> Triangles { get; set; }
+    public List<RiverData> RiverData { get; set; }
 
     //terrain parameters
     public double TerrainPerlinFrequency { get; set; }
@@ -78,6 +79,7 @@ namespace GrumpyDev.EndlessRiver
       vertexIndex = 0;
       Triangles = new List<Triangle<Vertex>>();
       Vertices = new List<Vertex>();
+      RiverData = new List<RiverData>();
       //general parameters
       Seed = 1234566;
       //terrain parameters
@@ -183,37 +185,54 @@ namespace GrumpyDev.EndlessRiver
       float rightWidth = Mathf.Abs((float)perlinRightWidth.GetValue(0, 0, worldZ * WorldScale)) * RiverWidthScale + MinimumChannelWidth;
 
       float leftChannelMiddle = (float)perlinLeft.GetValue(0, 0, worldZ * WorldScale) * RiverScale - ChannelOffset;
-      float leftChannelLeftShore = leftChannelMiddle - leftWidth / 2f;
-      float leftChannelRightShore = leftChannelMiddle + leftWidth / 2f;
+      float leftChannelLeftEdge = leftChannelMiddle - leftWidth / 2f;
+      float leftChannelRightEdge = leftChannelMiddle + leftWidth / 2f;
 
       float rightChannelMiddle = (float)perlinRight.GetValue(0, 0, worldZ * WorldScale) * RiverScale+ ChannelOffset;
-      float rightChannelLeftShore = rightChannelMiddle - rightWidth / 2f;
-      float rightChannelRightShore = rightChannelMiddle + rightWidth / 2f;
+      float rightChannelLeftEdge = rightChannelMiddle - rightWidth / 2f;
+      float rightChannelRightEdge = rightChannelMiddle + rightWidth / 2f;
 
-      float midJointChannel = leftChannelLeftShore * 0.5f + rightChannelRightShore * 0.5f;
+      float midJointChannel = leftChannelLeftEdge * 0.5f + rightChannelRightEdge * 0.5f;
+
+      RiverData riverDataElement = new RiverData
+      {
+        Z = worldZ,
+        JointChannelMiddleLine = midJointChannel,
+        LeftChannel = new RiverChannelData {
+          LeftEdge = leftChannelLeftEdge,
+          MiddleLine = leftChannelMiddle,
+          RightEdge = leftChannelRightEdge
+        },
+        RightChannel = new RiverChannelData {
+          LeftEdge = rightChannelLeftEdge,
+          MiddleLine = rightChannelMiddle,
+          RightEdge = rightChannelRightEdge
+        }
+      };
+      RiverData.Add(riverDataElement);
 
       //approximate channel values to nearest segment
-      int leftChannelLeftShoreSegment = Mathf.RoundToInt(leftChannelLeftShore / scaleX) + WidthSegments / 2;
+      int leftChannelLeftEdgeSegment = Mathf.FloorToInt(leftChannelLeftEdge / scaleX) + WidthSegments / 2;
       int leftChannelMiddleSegment = Mathf.RoundToInt(leftChannelMiddle / scaleX) + WidthSegments / 2;
-      int leftChannelRightShoreSegment = Mathf.RoundToInt(leftChannelRightShore / scaleX) + WidthSegments / 2;
-      int rightChannelLeftShoreSegment = Mathf.RoundToInt(rightChannelLeftShore / scaleX) + WidthSegments / 2;
+      int leftChannelRightEdgeSegment = Mathf.CeilToInt(leftChannelRightEdge / scaleX) + WidthSegments / 2;
+      int rightChannelLeftEdgeSegment = Mathf.FloorToInt(rightChannelLeftEdge / scaleX) + WidthSegments / 2;
       int rightChannelMiddleSegment = Mathf.RoundToInt(rightChannelMiddle / scaleX) + WidthSegments / 2;
-      int rightChannelRightShoreSegment = Mathf.RoundToInt(rightChannelRightShore / scaleX) + WidthSegments / 2;
+      int rightChannelRightEdgeSegment = Mathf.CeilToInt(rightChannelRightEdge / scaleX) + WidthSegments / 2;
       int midJointChannelSegment = Mathf.RoundToInt(midJointChannel / scaleX) + WidthSegments / 2;
 
-      if (rightChannelLeftShore < leftChannelRightShore)
+      if (rightChannelLeftEdge < leftChannelRightEdge)
       {
-        for (int i = leftChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
+        for (int i = leftChannelLeftEdgeSegment; i < rightChannelRightEdgeSegment; i++)
         {
           dataRow[i] = new Vector3(dataRow[i].x, BottomLevel, dataRow[i].z);
         }
       }
       else {
-        for (int i = leftChannelLeftShoreSegment + 1; i < leftChannelRightShoreSegment; i++)
+        for (int i = leftChannelLeftEdgeSegment; i < leftChannelRightEdgeSegment; i++)
         {
           dataRow[i] = new Vector3(dataRow[i].x, BottomLevel, dataRow[i].z);
         }
-        for (int i = rightChannelLeftShoreSegment + 1; i < rightChannelRightShoreSegment; i++)
+        for (int i = rightChannelLeftEdgeSegment; i < rightChannelRightEdgeSegment; i++)
         {
           dataRow[i] = new Vector3(dataRow[i].x, BottomLevel, dataRow[i].z);
         }
