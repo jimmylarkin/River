@@ -21,6 +21,7 @@ namespace GrumpyDev.EndlessRiver
     private float scaleZ;
     private ScaleOutput terrainScaledModule;
     private int vertexIndex;
+    private int currentEndZ;
 
     //general parameters
     public int Seed { get; set; }
@@ -76,6 +77,7 @@ namespace GrumpyDev.EndlessRiver
 
     public Map()
     {
+      currentEndZ = 0;
       vertexIndex = 0;
       Triangles = new List<Triangle<Vertex>>();
       Vertices = new List<Vertex>();
@@ -128,17 +130,19 @@ namespace GrumpyDev.EndlessRiver
 
     public void GenerateMapData()
     {
-      GenerateMapData(0, HeightSegments);
-    }
-
-    public void GenerateMapData(int startZ, int rows)
-    {
       InitGenerators();
       //set scalling factors
-      scaleX = (float)WorldWidth / ((float)WidthSegments - 1);
-      scaleZ = (float)WorldHeight / ((float)HeightSegments - 1);
+      scaleX = (float)WorldWidth / (float)WidthSegments;
+      scaleZ = (float)WorldHeight / (float)HeightSegments;
+      currentEndZ = 0;
+      GenerateMapChunk(HeightSegments);
+    }
 
-      for (int z = startZ; z < rows; z++)
+    public void GenerateMapChunk(int chunkLength)
+    {
+      Vertices = new List<Vertex>(WidthSegments * chunkLength);
+      Triangles = new List<Triangle<Vertex>>(WidthSegments * chunkLength * 2);
+      for (int z = currentEndZ; z < currentEndZ + chunkLength; z++)
       {
         Vector3[] dataRow = new Vector3[WidthSegments];
         float worldZ = z * scaleZ;
@@ -176,6 +180,7 @@ namespace GrumpyDev.EndlessRiver
       {
         SplitTriangles(triangle);
       }
+      currentEndZ += chunkLength - 1;
     }
 
     private void CarveRiverChannel(Vector3[] dataRow, float scaleX, float worldZ)
