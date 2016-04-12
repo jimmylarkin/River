@@ -100,5 +100,14 @@ namespace GrumpyDev.EndlessRiver
       }
       return -1;
     }
+
+    public bool HasVertex(Vertex vertex)
+    {
+      if (VertexIndex(vertex) >= 0)
+      {
+        return true;
+      }
+      return false;
+    }
   }
 }

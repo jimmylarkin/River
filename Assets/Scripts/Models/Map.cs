@@ -17,11 +17,14 @@ namespace GrumpyDev.EndlessRiver
     private Perlin perlinLeftWidth;
     private Perlin perlinRight;
     private Perlin perlinRightWidth;
-    private float scaleX;
-    private float scaleZ;
+    //private float scaleX;
+    //private float scaleZ;
     private ScaleOutput terrainScaledModule;
-    private int vertexIndex;
     private int currentEndZ;
+    private int vertexId;
+    List<Vertex> tempVertices;
+    List<Triangle<Vertex>> tempTriangles;
+
 
     //general parameters
     public int Seed { get; set; }
@@ -65,7 +68,7 @@ namespace GrumpyDev.EndlessRiver
     public float WaterLevel { get; set; }
     public float ShallowWaterLevel { get; set; }
     public float BottomLevel { get; set; }
-  
+
     //vertex colors
     private Color WaterColor { get; set; }
     private Color ShallowWaterColor { get; set; }
@@ -78,10 +81,10 @@ namespace GrumpyDev.EndlessRiver
     public Map()
     {
       currentEndZ = 0;
-      vertexIndex = 0;
       Triangles = new List<Triangle<Vertex>>();
       Vertices = new List<Vertex>();
       RiverData = new List<RiverData>();
+      vertexId = 0;
       //general parameters
       Seed = 1234566;
       //terrain parameters
@@ -92,8 +95,8 @@ namespace GrumpyDev.EndlessRiver
       TerrainRMFLacunarity = 5;
       TerrainRMFScale = 1.4;
       TerrainRMFBias = 0.6;
-      WidthSegments = 100;
-      HeightSegments = 200;
+      WidthSegments = 1;
+      HeightSegments = 1;
       WorldWidth = 100;
       WorldHeight = 200;
       WorldScale = 10;
@@ -128,41 +131,111 @@ namespace GrumpyDev.EndlessRiver
       WaterColor = new Color(37f / 256f, 66f / 256f, 71f / 256f);
     }
 
-    public void GenerateMapData()
+    public void GetMeshRawData(float fromWorldZ, float toWorldZ, ref Vector3[] rawVertices, ref int[] rawTriangles)
     {
+      int index = 0;
+      List<Vector3> rawVerticesList = new List<Vector3>();
+      List<int> rawTrianglesList = new List<int>();
+      for (int i = 0; i < Vertices.Count; i++)
+      {
+        Vertices[i].Index = -1;
+      }
+      for (int i = 0; i < Triangles.Count; i++)
+      {
+        if ((Triangles[i].Vertices[0].Position3D.z >= fromWorldZ && Triangles[i].Vertices[0].Position3D.z <= toWorldZ)
+          || (Triangles[i].Vertices[1].Position3D.z >= fromWorldZ && Triangles[i].Vertices[1].Position3D.z <= toWorldZ)
+          || (Triangles[i].Vertices[2].Position3D.z >= fromWorldZ && Triangles[i].Vertices[2].Position3D.z <= toWorldZ))
+        {
+          if (Triangles[i].Vertices[0].Index == -1)
+          {
+            Triangles[i].Vertices[0].Index = index++;
+            rawVerticesList.Add(Triangles[i].Vertices[0].Position3D);
+          }
+          if (Triangles[i].Vertices[1].Index == -1)
+          {
+            Triangles[i].Vertices[1].Index = index++;
+            rawVerticesList.Add(Triangles[i].Vertices[1].Position3D);
+          }
+          if (Triangles[i].Vertices[2].Index == -1)
+          {
+            Triangles[i].Vertices[2].Index = index++;
+            rawVerticesList.Add(Triangles[i].Vertices[2].Position3D);
+          }
+          rawTrianglesList.Add(Triangles[i].Vertices[0].Index);
+          rawTrianglesList.Add(Triangles[i].Vertices[1].Index);
+          rawTrianglesList.Add(Triangles[i].Vertices[2].Index);
+        }
+      }
+      rawVertices = rawVerticesList.ToArray();
+      rawTriangles = rawTrianglesList.ToArray();
+    }
+        
+    public void GenerateMapData(float fromWorldX, float toWorldX, float fromWorldZ, float toWorldZ)
+    {
+      Vertices.Clear();
+      Triangles.Clear();
       InitGenerators();
       //set scalling factors
-      scaleX = (float)WorldWidth / (float)WidthSegments;
-      scaleZ = (float)WorldHeight / (float)HeightSegments;
+      //scaleX = (float)WorldWidth / (float)WidthSegments;
+      //scaleZ = (float)WorldHeight / (float)HeightSegments;
       currentEndZ = 0;
-      GenerateMapChunk(HeightSegments);
+      GenerateMapInternal(fromWorldX, toWorldX, fromWorldZ, toWorldZ);
+      Vertices.AddRange(tempVertices);
+      Triangles.AddRange(tempTriangles);
+      tempVertices.Clear();
+      tempTriangles.Clear();
     }
 
-    public void GenerateMapChunk(int chunkLength)
+    public void GenerateMapChunk()
     {
-      Vertices = new List<Vertex>(WidthSegments * chunkLength);
-      Triangles = new List<Triangle<Vertex>>(WidthSegments * chunkLength * 2);
-      for (int z = currentEndZ; z < currentEndZ + chunkLength; z++)
+      //List<Vertex> verticesToRemove = new List<Vertex>();
+      //List<Triangle<Vertex>> trianglesToRemove = new List<Triangle<Vertex>>();
+      //GenerateMapChunkInternal(chunkLength);
+      //int startZ = currentEndZ - HeightSegments;
+      //for (int i = Vertices.Count - 1; i >= 0; i--)
+      //{
+      //  if (Vertices[i].ZSegment < startZ)
+      //  {
+      //    //verticesToRemove.Add(Vertices[i]);
+      //    Vertices.Remove(Vertices[i]);
+      //  }
+      //}
+      ////for (int i = 0; i < verticesToRemove.Count; i++)
+      ////{
+      ////  for (int j = 0; j < Triangles.Count; j++)
+      ////  {
+      ////    if (Triangles[j].HasVertex(verticesToRemove[i]))
+      ////    {
+      ////      trianglesToRemove.Add(Triangles[j]);
+      ////    }
+      ////  }
+      ////}
+    }
+
+    private void GenerateMapInternal(float fromWorldX, float toWorldX, float fromWorldZ, float toWorldZ)
+    {
+      tempVertices = new List<Vertex>();
+      tempTriangles = new List<Triangle<Vertex>>();
+      for (float worldZ = fromWorldZ; worldZ < toWorldZ; worldZ += HeightSegments)
       {
-        Vector3[] dataRow = new Vector3[WidthSegments];
-        float worldZ = z * scaleZ;
+        Vector3[] dataRow = new Vector3[Mathf.CeilToInt(toWorldX - fromWorldX) / WidthSegments];
 
         //build basic terrain data row
-        for (int x = 0; x < WidthSegments; x++)
+        int index = 0;
+        for (float worldX = fromWorldX; worldX < toWorldX; worldX += WidthSegments)
         {
-          float worldX = (x - WidthSegments / 2) * scaleX;
           float worldY = (float)terrainScaledModule.GetValue(worldX * WorldScale, 0, worldZ * WorldScale) / WorldScale + 1.1f;
           Vector3 vertex = new Vector3(worldX, worldY, worldZ);
-          dataRow[x] = vertex;
+          dataRow[index] = vertex;
+          index++;
         }
         //carve river shape
-        CarveRiverChannel(dataRow, scaleX, worldZ);
+        CarveRiverChannel(dataRow, worldZ);
         //collect modified points and add to vertices array
-        for (int x = 0; x < WidthSegments; x++)
+        for (int x = 0; x < dataRow.Length; x++)
         {
-          Vertices.Add(new Vertex { Position3D = dataRow[x], Id = vertexIndex++ });
+          tempVertices.Add(new Vertex { Position3D = dataRow[x], Id = vertexId++ });
         }
-        //build heightmaps
         //for (int x = 0; x < widthSegments; x++)
         //{
         //  uvs.Add(new Vector2(x * scaleX / (float)widthSegments, z * scaleZ / (float)heightSegments));
@@ -170,20 +243,19 @@ namespace GrumpyDev.EndlessRiver
       }
 
       var config = new TriangulationComputationConfig();
-      Triangles = Triangulation.CreateDelaunay<Vertex, Triangle<Vertex>>(Vertices, config).Cells.ToList();
-      for (int i = Triangles.Count - 1; i >= 0; i--)
+      tempTriangles = Triangulation.CreateDelaunay<Vertex, Triangle<Vertex>>(tempVertices, config).Cells.ToList();
+      for (int i = tempTriangles.Count - 1; i >= 0; i--)
       {
-        Triangles[i].ComputeNormal();
-        SetBiome(Triangles[i], biomesPerlin);
+        tempTriangles[i].ComputeNormal();
+        SetBiome(tempTriangles[i], biomesPerlin);
       }
-      foreach (Triangle<Vertex> triangle in Triangles)
+      foreach (Triangle<Vertex> triangle in tempTriangles)
       {
         SplitTriangles(triangle);
       }
-      currentEndZ += chunkLength - 1;
     }
 
-    private void CarveRiverChannel(Vector3[] dataRow, float scaleX, float worldZ)
+    private void CarveRiverChannel(Vector3[] dataRow, float worldZ)
     {
       //generate river channels for Z
       float leftWidth = Mathf.Abs((float)perlinLeftWidth.GetValue(0, 0, worldZ * WorldScale)) * RiverWidthScale + MinimumChannelWidth;
@@ -193,7 +265,7 @@ namespace GrumpyDev.EndlessRiver
       float leftChannelLeftEdge = leftChannelMiddle - leftWidth / 2f;
       float leftChannelRightEdge = leftChannelMiddle + leftWidth / 2f;
 
-      float rightChannelMiddle = (float)perlinRight.GetValue(0, 0, worldZ * WorldScale) * RiverScale+ ChannelOffset;
+      float rightChannelMiddle = (float)perlinRight.GetValue(0, 0, worldZ * WorldScale) * RiverScale + ChannelOffset;
       float rightChannelLeftEdge = rightChannelMiddle - rightWidth / 2f;
       float rightChannelRightEdge = rightChannelMiddle + rightWidth / 2f;
 
@@ -203,12 +275,14 @@ namespace GrumpyDev.EndlessRiver
       {
         Z = worldZ,
         JointChannelMiddleLine = midJointChannel,
-        LeftChannel = new RiverChannelData {
+        LeftChannel = new RiverChannelData
+        {
           LeftEdge = leftChannelLeftEdge,
           MiddleLine = leftChannelMiddle,
           RightEdge = leftChannelRightEdge
         },
-        RightChannel = new RiverChannelData {
+        RightChannel = new RiverChannelData
+        {
           LeftEdge = rightChannelLeftEdge,
           MiddleLine = rightChannelMiddle,
           RightEdge = rightChannelRightEdge
@@ -217,13 +291,13 @@ namespace GrumpyDev.EndlessRiver
       RiverData.Add(riverDataElement);
 
       //approximate channel values to nearest segment
-      int leftChannelLeftEdgeSegment = Mathf.FloorToInt(leftChannelLeftEdge / scaleX) + WidthSegments / 2;
-      int leftChannelMiddleSegment = Mathf.RoundToInt(leftChannelMiddle / scaleX) + WidthSegments / 2;
-      int leftChannelRightEdgeSegment = Mathf.CeilToInt(leftChannelRightEdge / scaleX) + WidthSegments / 2;
-      int rightChannelLeftEdgeSegment = Mathf.FloorToInt(rightChannelLeftEdge / scaleX) + WidthSegments / 2;
-      int rightChannelMiddleSegment = Mathf.RoundToInt(rightChannelMiddle / scaleX) + WidthSegments / 2;
-      int rightChannelRightEdgeSegment = Mathf.CeilToInt(rightChannelRightEdge / scaleX) + WidthSegments / 2;
-      int midJointChannelSegment = Mathf.RoundToInt(midJointChannel / scaleX) + WidthSegments / 2;
+      int leftChannelLeftEdgeSegment = Mathf.FloorToInt(leftChannelLeftEdge / WidthSegments) + dataRow.Length / 2;
+      int leftChannelMiddleSegment = Mathf.RoundToInt(leftChannelMiddle / WidthSegments) + dataRow.Length / 2;
+      int leftChannelRightEdgeSegment = Mathf.CeilToInt(leftChannelRightEdge / WidthSegments) + dataRow.Length / 2;
+      int rightChannelLeftEdgeSegment = Mathf.FloorToInt(rightChannelLeftEdge / WidthSegments) + dataRow.Length / 2;
+      int rightChannelMiddleSegment = Mathf.RoundToInt(rightChannelMiddle / WidthSegments) + dataRow.Length / 2;
+      int rightChannelRightEdgeSegment = Mathf.CeilToInt(rightChannelRightEdge / WidthSegments) + dataRow.Length / 2;
+      int midJointChannelSegment = Mathf.RoundToInt(midJointChannel / WidthSegments) + dataRow.Length / 2;
 
       if (rightChannelLeftEdge < leftChannelRightEdge)
       {
@@ -243,7 +317,7 @@ namespace GrumpyDev.EndlessRiver
         }
       }
       bool inWater = dataRow[0].y < WaterLevel;
-      for (int i = 1; i < WidthSegments; i++)
+      for (int i = 1; i < dataRow.Length; i++)
       {
         if (inWater && dataRow[i].y >= WaterLevel)
         {
@@ -385,9 +459,15 @@ namespace GrumpyDev.EndlessRiver
       int index = triangle.VertexIndex(toDuplicate);
       if (index >= 0)
       {
-        Vertex newVertex = new Vertex { Id = vertexIndex++, Position3D = new Vector3(toDuplicate.Position3D.x, toDuplicate.Position3D.y, toDuplicate.Position3D.z) };
+        Vertex newVertex = new Vertex
+        {
+          Position3D = new Vector3(toDuplicate.Position3D.x, toDuplicate.Position3D.y, toDuplicate.Position3D.z),
+          Xsegment = toDuplicate.Xsegment,
+          ZSegment = toDuplicate.ZSegment,
+          Id = vertexId++
+        };
         triangle.Vertices[index] = newVertex;
-        Vertices.Add(newVertex);
+        tempVertices.Add(newVertex);
       }
     }
 

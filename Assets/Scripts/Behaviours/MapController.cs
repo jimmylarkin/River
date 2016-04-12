@@ -9,69 +9,95 @@ namespace GrumpyDev.EndlessRiver
 {
   public class MapController : MonoBehaviour
   {
+    private int ownerId;
+    private MeshFilter meshFilter;
+    private Mesh mesh;
     public Map map;
     private float secondsSinceLastMapupdate;
+    private bool isDone = false;
+    private bool isReady = false;
+    private float z = 0;
 
-    void Start() {
-      secondsSinceLastMapupdate = 0f;
-      map = new Map();
-      map.Seed = 12299474;
-      map.GenerateMapData();
-      Mesh mesh = new Mesh();
-      var verticesOrdered = map.Vertices.OrderBy(v => v.Position3D.z).OrderBy(v => v.Position3D.x).ToArray();
-      int maxId = verticesOrdered.Length;
-      for (int i = 0; i < maxId; i++)
+    public MeshFilter MeshFilter {
+      get
       {
-        verticesOrdered[i].Id = i;
+        meshFilter = meshFilter ?? GetComponent<MeshFilter>();
+        meshFilter = meshFilter ?? gameObject.AddComponent<MeshFilter>();
+        return meshFilter;
       }
-      mesh.vertices = verticesOrdered.Select(v => v.Position3D).ToArray();
-      List<int> triangleIndexes = new List<int>(map.Triangles.Count * 3);
-      foreach (var triangle in map.Triangles)
-      {
-        triangleIndexes.Add(triangle.Vertices[0].Id);
-        triangleIndexes.Add(triangle.Vertices[1].Id);
-        triangleIndexes.Add(triangle.Vertices[2].Id);
-      }
-      mesh.triangles = triangleIndexes.ToArray();
-      mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
-      mesh.RecalculateBounds();
-      mesh.Optimize();
-      MeshFilter meshFilter = GetComponent<MeshFilter>();
-      meshFilter.sharedMesh = mesh;
     }
 
-    void Update() {
+    public Mesh Mesh
+    {
+      get {
+        bool isOwner = ownerId == gameObject.GetInstanceID();
+        if (MeshFilter.sharedMesh == null || !isOwner)
+        {
+          MeshFilter.sharedMesh = mesh = new Mesh();
+          ownerId = gameObject.GetInstanceID();
+          mesh.name = "Mesh [" + ownerId + "]";
+        }
+        return mesh;
+      }
+    }
+    
+
+    void Start()
+    {
+      Debug.Log("Starting");
+      secondsSinceLastMapupdate = 0f;
+      //MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+      //MeshRenderer renderer = gameObject.GetComponent<MeshRenderer>();
+      map = new Map();
+      map.Seed = 12299474;
+      map.GenerateMapData(-50, 50, z, z + 100);
+      //Mesh mesh = new Mesh();
+      Mesh.Clear();
+      Vector3[] vertices = null;
+      int[] triangles = null;
+      map.GetMeshRawData(z, z + 100, ref vertices, ref triangles);
+      Mesh.vertices = vertices;
+      Mesh.triangles = triangles;
+      Mesh.RecalculateBounds();
+      Mesh.Optimize();
+      //meshFilter.mesh = mesh;
+      Debug.Log("Generated starting point");
+      isReady = true;
+    }
+
+    void Update()
+    {
     }
 
     void FixedUpdate()
     {
       secondsSinceLastMapupdate += Time.deltaTime;
-      GenerateMapFragment();
+      if (isReady)
+      {
+        if (secondsSinceLastMapupdate > 1)
+        {
+          secondsSinceLastMapupdate = 0;
+          z += 5;
+          GenerateMapFragment();
+          isDone = true;
+        }
+      }
     }
 
     public void GenerateMapFragment()
     {
-      //generate next chunk
-      //first row of vertices (first segmentWidth number of them) will have the same positions as the last row of the current map
-      map.GenerateMapChunk(2);
-      MeshFilter meshFilter = GetComponent<MeshFilter>();
-      Mesh mesh = meshFilter.sharedMesh;
-      Vector3[] oldVertices = mesh.vertices;
-      Vector3[] vertices = new Vector3[oldVertices.Length];
-      int[] oldTriangles = mesh.triangles;
-      int[] triangles = new int[mesh.triangles.Length];
-      int newVerticesCount = map.Vertices.Count - map.WidthSegments;
-      int newTrianglesCount = map.Triangles.Count;
-      for (int i = 0; i < oldVertices.Length - newVerticesCount; i++)
-      {
-        vertices[i] = oldVertices[i + newVerticesCount];
-      }
-      for (int i = 0; i < oldTriangles.Length - newTrianglesCount; i++)
-      {
-        triangles[i] = oldTriangles[i + newTrianglesCount] - newTrianglesCount;
-      }
-      mesh.vertices = vertices;
-      mesh.triangles = triangles;
+      ////generate next chunk
+      map.GenerateMapData(-50, 50, z, z + 100);
+      //Mesh mesh = new Mesh();
+      Mesh.Clear();
+      Vector3[] vertices = null;
+      int[] triangles = null;
+      map.GetMeshRawData(z, z + 100, ref vertices, ref triangles);
+      Mesh.vertices = vertices;
+      Mesh.triangles = triangles;
+      Mesh.RecalculateBounds();
+      Mesh.Optimize();
+      Debug.Log("--> chunk done");
     }
   }
 }

@@ -42,23 +42,10 @@ namespace GrumpyDev.EndlessRiver.Editor
       //renderer.materials = new Material[8];
       Map map = new Map();
       map.Seed = seed;
-      map.GenerateMapData();
+      //map.GenerateMapData();
       Mesh mesh = new Mesh();
-      var verticesOrdered = map.Vertices.OrderBy(v => v.Position3D.z).OrderBy(v => v.Position3D.x).ToArray();
-      int maxId = verticesOrdered.Length;
-      for (int i = 0; i < maxId; i++)
-      {
-        verticesOrdered[i].Id = i;
-      }
-      mesh.vertices = verticesOrdered.Select(v => v.Position3D).ToArray();
-      List<int> triangleIndexes = new List<int>(map.Triangles.Count * 3);
-      foreach (var triangle in map.Triangles)
-      {
-        triangleIndexes.Add(triangle.Vertices[0].Id);
-        triangleIndexes.Add(triangle.Vertices[1].Id);
-        triangleIndexes.Add(triangle.Vertices[2].Id);
-      }
-      mesh.triangles = triangleIndexes.ToArray();
+      //mesh.vertices = map.GetMeshVertices();
+      //mesh.triangles = map.GetMeshTriangles();
       //mesh.subMeshCount = 8;
       //GetTrianglesByBiome(triangleIndexes, Biomes.Grass);
       //mesh.SetTriangles(triangleIndexes.ToArray(), 0);
@@ -77,7 +64,7 @@ namespace GrumpyDev.EndlessRiver.Editor
       //GetTrianglesByBiome(triangleIndexes, Biomes.DeepWater);
       //mesh.SetTriangles(triangleIndexes.ToArray(), 7);
       //mesh.triangles = triangleIndexes.ToArray();
-      mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
+      //mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
       //mesh.normals = verticesOrdered.Select(v => v.Normal).ToArray();
       //mesh.uv = uvs.ToArray();
       //mesh.tangents = tangents.ToArray();
@@ -94,7 +81,7 @@ namespace GrumpyDev.EndlessRiver.Editor
     {
       Map map = new Map();
       map.Seed = seed;
-      map.GenerateMapData();
+      //map.GenerateMapData();
       Mesh mesh = new Mesh();
       var verticesOrdered = map.Vertices.OrderBy(v => v.Position3D.z).OrderBy(v => v.Position3D.x).ToArray();
       int maxId = verticesOrdered.Length;

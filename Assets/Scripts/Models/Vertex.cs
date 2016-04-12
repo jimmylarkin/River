@@ -9,9 +9,17 @@ namespace GrumpyDev.EndlessRiver
   [DebuggerDisplay("{Id} ({Position3D})")]
   public class Vertex : IVertex
   {
+    public int Xsegment { get; set; }
+    public int ZSegment { get; set; }
     public int Id { get; set; }
+    public int Index { get; set; }
     public Vector3 Position3D { get; set; }
     public Color Color { get; set; }
+
+    public Vertex()
+    {
+      Id = -1;
+    }
 
     //required for triangulation algorithm to work, maybe one day I will change that to Vector 2 (or even 3).
     public double[] Position
