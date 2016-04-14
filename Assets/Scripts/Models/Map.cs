@@ -216,13 +216,13 @@ namespace GrumpyDev.EndlessRiver
     {
       tempVertices = new List<Vertex>();
       tempTriangles = new List<Triangle<Vertex>>();
-      for (float worldZ = fromWorldZ; worldZ < toWorldZ; worldZ += HeightSegments)
+      for (float worldZ = fromWorldZ; worldZ <= toWorldZ; worldZ += HeightSegments)
       {
         Vector3[] dataRow = new Vector3[Mathf.CeilToInt(toWorldX - fromWorldX) / WidthSegments];
 
         //build basic terrain data row
         int index = 0;
-        for (float worldX = fromWorldX; worldX < toWorldX; worldX += WidthSegments)
+        for (float worldX = fromWorldX; worldX <= toWorldX; worldX += WidthSegments)
         {
           float worldY = (float)terrainScaledModule.GetValue(worldX * WorldScale, 0, worldZ * WorldScale) / WorldScale + 1.1f;
           Vector3 vertex = new Vector3(worldX, worldY, worldZ);
@@ -231,10 +231,17 @@ namespace GrumpyDev.EndlessRiver
         }
         //carve river shape
         CarveRiverChannel(dataRow, worldZ);
+
         //collect modified points and add to vertices array
         for (int x = 0; x < dataRow.Length; x++)
         {
-          tempVertices.Add(new Vertex { Position3D = dataRow[x], Id = vertexId++ });
+          //check for boundaries
+          bool boundary = false;
+          if (worldZ == fromWorldZ || worldZ == toWorldZ || dataRow[x].x == fromWorldX || dataRow[x].x == toWorldX)
+          {
+            boundary = true;
+          }
+          tempVertices.Add(new Vertex { Position3D = dataRow[x], Id = vertexId++, IsOnBoundary = boundary });
         }
         //for (int x = 0; x < widthSegments; x++)
         //{

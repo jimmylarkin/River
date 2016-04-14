@@ -109,5 +109,28 @@ namespace GrumpyDev.EndlessRiver
       }
       return false;
     }
+
+    public void ReplaceVertex(TVertex oldVertex, TVertex newVertex)
+    {
+      if (Vertices.Length < 3)
+      {
+        return;
+      }
+      if (Vertices[0].Id == oldVertex.Id)
+      {
+        Vertices[0] = newVertex;
+        return;
+      }
+      if (Vertices[1].Id == oldVertex.Id)
+      {
+        Vertices[1] = newVertex;
+        return;
+      }
+      if (Vertices[2].Id == oldVertex.Id)
+      {
+        Vertices[2] = newVertex;
+        return;
+      }
+    }
   }
 }

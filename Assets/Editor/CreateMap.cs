@@ -44,33 +44,14 @@ namespace GrumpyDev.EndlessRiver.Editor
       map.Seed = seed;
       //map.GenerateMapData();
       Mesh mesh = new Mesh();
-      //mesh.vertices = map.GetMeshVertices();
-      //mesh.triangles = map.GetMeshTriangles();
-      //mesh.subMeshCount = 8;
-      //GetTrianglesByBiome(triangleIndexes, Biomes.Grass);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 0);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.Dirt);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 1);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.DeadGrass);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 2);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.Cliff);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 3);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.Sand);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 4);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.Water);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 5);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.ShallowWater);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 6);
-      //GetTrianglesByBiome(triangleIndexes, Biomes.DeepWater);
-      //mesh.SetTriangles(triangleIndexes.ToArray(), 7);
-      //mesh.triangles = triangleIndexes.ToArray();
-      //mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
-      //mesh.normals = verticesOrdered.Select(v => v.Normal).ToArray();
-      //mesh.uv = uvs.ToArray();
-      //mesh.tangents = tangents.ToArray();
+      map.GenerateMapData(-50, 50, 0, 200);
+      Vector3[] vertices = null;
+      int[] triangles = null;
+      map.GetMeshRawData(0, 200, ref vertices, ref triangles);
+      mesh.vertices = vertices;
+      mesh.triangles = triangles;
       mesh.RecalculateBounds();
       mesh.Optimize();
-
       meshFilter.sharedMesh = mesh;
       var mapController = plane.AddComponent<MapController>();
       mapController.map = map;
@@ -81,23 +62,13 @@ namespace GrumpyDev.EndlessRiver.Editor
     {
       Map map = new Map();
       map.Seed = seed;
-      //map.GenerateMapData();
+      map.GenerateMapData(-50, 50, 0, 200);
       Mesh mesh = new Mesh();
-      var verticesOrdered = map.Vertices.OrderBy(v => v.Position3D.z).OrderBy(v => v.Position3D.x).ToArray();
-      int maxId = verticesOrdered.Length;
-      for (int i = 0; i < maxId; i++)
-      {
-        verticesOrdered[i].Id = i;
-      }
-      mesh.vertices = verticesOrdered.Select(v => v.Position3D).ToArray();
-      List<int> triangleIndexes = new List<int>(map.Triangles.Count * 3);
-      foreach (var triangle in map.Triangles)
-      {
-        triangleIndexes.Add(triangle.Vertices[0].Id);
-        triangleIndexes.Add(triangle.Vertices[1].Id);
-        triangleIndexes.Add(triangle.Vertices[2].Id);
-      }
-      mesh.triangles = triangleIndexes.ToArray();
+      Vector3[] vertices = null;
+      int[] triangles = null;
+      map.GetMeshRawData(0, 200, ref vertices, ref triangles);
+      mesh.vertices = vertices;
+      mesh.triangles = triangles;
       //mesh.subMeshCount = 8;
       //GetTrianglesByBiome(triangleIndexes, Biomes.Grass);
       //mesh.SetTriangles(triangleIndexes.ToArray(), 0);
@@ -116,7 +87,6 @@ namespace GrumpyDev.EndlessRiver.Editor
       //GetTrianglesByBiome(triangleIndexes, Biomes.DeepWater);
       //mesh.SetTriangles(triangleIndexes.ToArray(), 7);
       //mesh.triangles = triangleIndexes.ToArray();
-      mesh.colors = verticesOrdered.Select(v => v.Color).ToArray();
       //mesh.normals = verticesOrdered.Select(v => v.Normal).ToArray();
       //mesh.uv = uvs.ToArray();
       //mesh.tangents = tangents.ToArray();
